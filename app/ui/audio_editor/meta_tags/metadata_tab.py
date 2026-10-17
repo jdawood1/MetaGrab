@@ -1,15 +1,23 @@
-from PySide6.QtGui import QPixmap, QDragEnterEvent, QDropEvent
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog,
-    QMessageBox, QPushButton, QGroupBox, QScrollArea
-)
-from PySide6.QtCore import Qt
-import mutagen.id3
 import os
 
+import mutagen.id3
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QDragEnterEvent, QDropEvent, QPixmap
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
+
 from app.ui.audio_editor.meta_tags.components.img_cover_widget import CoverDropWidget
-from app.ui.audio_editor.meta_tags.components.metadata_form_widget import MetadataFormWidget
 from app.ui.audio_editor.meta_tags.components.metadata_embedder import MetadataEmbedder
+from app.ui.audio_editor.meta_tags.components.metadata_form_widget import MetadataFormWidget
 from app.ui.audio_editor.meta_tags.components.text_drop_tooltip import MetadataHelpWidget
 from app.ui.audio_editor.meta_tags.components.text_drop_widget import MetadataTextDropWidget
 
@@ -175,7 +183,9 @@ class MetadataTab(QWidget):
             return
 
         if not title:
-            QMessageBox.warning(self, "Missing Title", "Please enter a title before embedding metadata.")
+            QMessageBox.warning(
+                self, "Missing Title", "Please enter a title before embedding metadata."
+            )
             return
 
         cover_path = self.cover_widget.cover_path or None
@@ -185,10 +195,7 @@ class MetadataTab(QWidget):
             QMessageBox.warning(self, "Cover Art Error", str(e))
             return
 
-        success = embedder.embed_metadata(
-            file_path=self.audio_file_path,
-            **metadata
-        )
+        success = embedder.embed_metadata(file_path=self.audio_file_path, **metadata)
 
         if success:
             QMessageBox.information(self, "Success", "Metadata successfully embedded.")

@@ -1,8 +1,8 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QLineEdit, QTextEdit, QSizePolicy
+import mutagen.id3
+from mutagen.easyid3 import EasyID3
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextOption
-from mutagen.easyid3 import EasyID3
-import mutagen.id3
+from PySide6.QtWidgets import QFormLayout, QLineEdit, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
 
 
 class MetadataFormWidget(QWidget):
@@ -32,16 +32,28 @@ class MetadataFormWidget(QWidget):
         self.lyrics_input = QTextEdit()
 
         for widget in [
-            self.title_input, self.artist_input, self.album_input,
-            self.album_artist_input, self.genre_input, self.year_input,
-            self.track_input, self.bpm_input,
-            self.composer_input, self.comment_input,
-            self.explicit_input, self.lyrics_input
+            self.title_input,
+            self.artist_input,
+            self.album_input,
+            self.album_artist_input,
+            self.genre_input,
+            self.year_input,
+            self.track_input,
+            self.bpm_input,
+            self.composer_input,
+            self.comment_input,
+            self.explicit_input,
+            self.lyrics_input,
         ]:
             widget.setMinimumWidth(350)
 
         # Adjust text fields for multiline input
-        for textedit in [self.composer_input, self.comment_input, self.explicit_input, self.lyrics_input]:
+        for textedit in [
+            self.composer_input,
+            self.comment_input,
+            self.explicit_input,
+            self.lyrics_input,
+        ]:
             textedit.setWordWrapMode(QTextOption.WordWrap)
             textedit.setMinimumHeight(60)
             textedit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -110,15 +122,22 @@ class MetadataFormWidget(QWidget):
 
     def clear(self):
         for field in [
-            self.title_input, self.artist_input, self.album_input,
-            self.album_artist_input, self.genre_input, self.year_input,
-            self.track_input, self.bpm_input
+            self.title_input,
+            self.artist_input,
+            self.album_input,
+            self.album_artist_input,
+            self.genre_input,
+            self.year_input,
+            self.track_input,
+            self.bpm_input,
         ]:
             field.clear()
 
         for text_field in [
-            self.composer_input, self.comment_input,
-            self.explicit_input, self.lyrics_input
+            self.composer_input,
+            self.comment_input,
+            self.explicit_input,
+            self.lyrics_input,
         ]:
             text_field.clear()
 
@@ -138,14 +157,16 @@ class MetadataFormWidget(QWidget):
                 "bpm": audio.get("bpm", [""])[0] if "bpm" in audio else "",
                 "explicit": "",  # fallback value
                 "comment": "",
-                "lyrics": ""
+                "lyrics": "",
             }
 
             # Read additional ID3-only frames
             full_tags = mutagen.id3.ID3(path)
 
             # comm = next((f for f in full_tags.getall("COMM") if f.lang == "eng"), None)
-            comm = next((f for f in full_tags.getall("COMM") if f.lang == "eng" and f.desc == ""), None)
+            comm = next(
+                (f for f in full_tags.getall("COMM") if f.lang == "eng" and f.desc == ""), None
+            )
 
             if comm:
                 metadata["comment"] = comm.text[0]

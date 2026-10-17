@@ -1,14 +1,29 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QHBoxLayout, QLineEdit, QPushButton,
-    QFileDialog, QGroupBox, QCheckBox, QMessageBox, QComboBox,
-    QStackedLayout, QProgressBar, QScrollArea
-)
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QScrollArea,
+    QStackedLayout,
+    QVBoxLayout,
+    QWidget,
+)
 
-from app.ui.audio_editor.editing_tools.audio_presets import AudioNormalizePresets, AudioFormatPresets, parse_time_input
+from app.ui.audio_editor.editing_tools.audio_presets import (
+    AudioFormatPresets,
+    AudioNormalizePresets,
+    parse_time_input,
+)
 from app.ui.audio_editor.editing_tools.audio_workers import UnifiedProcessWorker
 
 
@@ -41,7 +56,9 @@ class EditingToolsTab(QWidget):
         self.crop_end = QLineEdit()
         self.crop_start.setPlaceholderText("Start (e.g. 1:20, 2m10s, 75)")
         self.crop_end.setPlaceholderText("End (optional)")
-        layout.addWidget(self._build_option_section("", self.crop_checkbox, [self.crop_start, self.crop_end]))
+        layout.addWidget(
+            self._build_option_section("", self.crop_checkbox, [self.crop_start, self.crop_end])
+        )
 
         # Normalize section
         self.normalize_checkbox = QCheckBox("Apply Normalize")
@@ -56,7 +73,11 @@ class EditingToolsTab(QWidget):
                 tooltip = f"Loudness: {preset['I']} LUFS\nTrue Peak: {preset['TP']} dB\nLRA: {preset['LRA']} LU"
                 self.normalize_preset_dropdown.setItemData(index, tooltip, role=Qt.ToolTipRole)
 
-        layout.addWidget(self._build_option_section("", self.normalize_checkbox, [self.normalize_preset_dropdown]))
+        layout.addWidget(
+            self._build_option_section(
+                "", self.normalize_checkbox, [self.normalize_preset_dropdown]
+            )
+        )
 
         # Convert section
         self.convert_checkbox = QCheckBox("Apply Convert")
@@ -69,7 +90,13 @@ class EditingToolsTab(QWidget):
         for fmt in AudioFormatPresets.FORMATS:
             self.convert_format.addItem(fmt.upper(), fmt)
 
-        layout.addWidget(self._build_option_section("", self.convert_checkbox, [self.convert_format, self.convert_bitrate, self.convert_channels]))
+        layout.addWidget(
+            self._build_option_section(
+                "",
+                self.convert_checkbox,
+                [self.convert_format, self.convert_bitrate, self.convert_channels],
+            )
+        )
 
         for combo in (self.normalize_preset_dropdown, self.convert_format):
             combo.wheelEvent = lambda event, s=scroll: s.wheelEvent(event)
@@ -104,12 +131,19 @@ class EditingToolsTab(QWidget):
     def _file_selector_row(self, label: str, is_input: bool) -> QHBoxLayout:
         row = QHBoxLayout()
         field = QLineEdit()
-        field.setPlaceholderText("Drag or browse for audio file..." if is_input else "Set output path...")
+        field.setPlaceholderText(
+            "Drag or browse for audio file..." if is_input else "Set output path..."
+        )
         button = QPushButton("Browse")
 
         def browse():
             if is_input:
-                path, _ = QFileDialog.getOpenFileName(self, "Select Input Audio", "", "Audio Files (*.mp3 *.wav *.flac *.m4a *.aac *.opus)")
+                path, _ = QFileDialog.getOpenFileName(
+                    self,
+                    "Select Input Audio",
+                    "",
+                    "Audio Files (*.mp3 *.wav *.flac *.m4a *.aac *.opus)",
+                )
                 if path:
                     field.setText(path)
                     self.input_path = path
@@ -118,7 +152,9 @@ class EditingToolsTab(QWidget):
                     self.output_path = default_output
                     self.output_field.setText(default_output)
             else:
-                path, _ = QFileDialog.getSaveFileName(self, "Save Output Audio", "", "Audio Files (*.mp3 *.flac *.aac *.wav *.ogg)")
+                path, _ = QFileDialog.getSaveFileName(
+                    self, "Save Output Audio", "", "Audio Files (*.mp3 *.flac *.aac *.wav *.ogg)"
+                )
                 if path:
                     field.setText(path)
                     self.output_path = path
@@ -177,14 +213,14 @@ class EditingToolsTab(QWidget):
             return
 
         if not (
-                self.crop_checkbox.isChecked() or
-                self.normalize_checkbox.isChecked() or
-                self.convert_checkbox.isChecked()
+            self.crop_checkbox.isChecked()
+            or self.normalize_checkbox.isChecked()
+            or self.convert_checkbox.isChecked()
         ):
             QMessageBox.information(
                 self,
                 "No Actions Selected",
-                "Please select at least one processing option (Crop, Normalize, or Convert)."
+                "Please select at least one processing option (Crop, Normalize, or Convert).",
             )
             return
 
@@ -197,7 +233,7 @@ class EditingToolsTab(QWidget):
                 QMessageBox.warning(
                     self,
                     "Invalid Input",
-                    "Start/End time is invalid.\nExamples: 90, 1:30, 2m10s, 1h 2m"
+                    "Start/End time is invalid.\nExamples: 90, 1:30, 2m10s, 1h 2m",
                 )
                 return
 
@@ -206,7 +242,9 @@ class EditingToolsTab(QWidget):
             key = self.normalize_preset_dropdown.currentData()
             normalize_filter = AudioNormalizePresets.get_preset_filter(key)
             if not normalize_filter:
-                QMessageBox.warning(self, "Invalid Preset", "Please select a valid normalization preset.")
+                QMessageBox.warning(
+                    self, "Invalid Preset", "Please select a valid normalization preset."
+                )
                 return
 
         codec = "libmp3lame"
@@ -248,7 +286,7 @@ class EditingToolsTab(QWidget):
                 "File Exists",
                 f"The file:\n\n{self.output_path}\n\nalready exists. Overwrite it?",
                 QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                QMessageBox.No,
             )
             if reply != QMessageBox.Yes:
                 return
@@ -262,14 +300,16 @@ class EditingToolsTab(QWidget):
             normalize_filter=normalize_filter,
             codec=codec,
             bitrate=bitrate,
-            channels=channels
+            channels=channels,
         )
-        self.process_worker.finished.connect(lambda success, _: (
-            self._hide_loader(),
-            QMessageBox.information(
-                self,
-                "Done",
-                "Audio processing complete." if success else "Audio processing failed."
+        self.process_worker.finished.connect(
+            lambda success, _: (
+                self._hide_loader(),
+                QMessageBox.information(
+                    self,
+                    "Done",
+                    "Audio processing complete." if success else "Audio processing failed.",
+                ),
             )
-        ))
+        )
         self.process_worker.start()

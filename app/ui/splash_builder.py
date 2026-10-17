@@ -1,11 +1,12 @@
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
-from PySide6.QtGui import QPixmap, QMovie
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QMovie, QPixmap
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from app.core.logger import logger
-from app.core.resource_path import resource_path, AssetNotFoundError
+from app.core.resource_path import AssetNotFoundError, resource_path
 
 LOG_MEDIA_SPLASH = False
+
 
 class MediaSplash(QWidget):
     def __init__(self, asset_path: str, comment: str = None, parent=None, autoplay=True, loop=True):
@@ -35,7 +36,7 @@ class MediaSplash(QWidget):
             logger.warning(f"MediaSplash: Asset not found: {e}")
             return
 
-        if full_path.lower().endswith('.gif'):
+        if full_path.lower().endswith(".gif"):
             self.movie = QMovie(full_path)
             self.movie.setCacheMode(QMovie.CacheAll)
             self.label.setMovie(self.movie)
@@ -50,7 +51,7 @@ class MediaSplash(QWidget):
                     logger.debug("MediaSplash: Looping enabled for GIF")
                 self.movie.finished.connect(lambda: self.movie.start())
 
-        elif full_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+        elif full_path.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
             pixmap = QPixmap(full_path)
             self.label.setPixmap(pixmap)
             if LOG_MEDIA_SPLASH:
@@ -99,7 +100,9 @@ class MediaSplash(QWidget):
         if self.movie:
             self.movie.setScaledSize(self.size())
         elif self.label.pixmap():
-            scaled = self.label.pixmap().scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            scaled = self.label.pixmap().scaled(
+                self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
             self.label.setPixmap(scaled)
 
     def scale_to_parent(self, scale_factor: float = 0.5):
@@ -116,16 +119,16 @@ class MediaSplash(QWidget):
         self.set_fixed_size(new_width, new_height)
 
     def set_comment(
-            self,
-            text: str,
-            *,
-            x: int = 0,
-            y: int = 0,
-            color: str = "white",
-            font_size: int = 12,
-            italic: bool = False,
-            bold: bool = False,
-            rich: bool = False
+        self,
+        text: str,
+        *,
+        x: int = 0,
+        y: int = 0,
+        color: str = "white",
+        font_size: int = 12,
+        italic: bool = False,
+        bold: bool = False,
+        rich: bool = False,
     ):
         """Set or update the comment text with styling and absolute positioning."""
         if self.comment_label is None:

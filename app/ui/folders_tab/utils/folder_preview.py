@@ -1,8 +1,9 @@
-from pathlib import Path
-from mutagen import File as MutagenFile
 from collections import defaultdict
+from pathlib import Path
 
-AUDIO_EXTENSIONS = {'.mp3', '.flac', '.wav', '.m4a', '.aac', '.ogg'}
+from mutagen import File as MutagenFile
+
+AUDIO_EXTENSIONS = {".mp3", ".flac", ".wav", ".m4a", ".aac", ".ogg"}
 
 
 def format_duration(seconds: float) -> str:
@@ -14,7 +15,7 @@ def format_duration(seconds: float) -> str:
 
 
 def format_size(bytes_: int) -> str:
-    for unit in ['B', 'KB', 'MB', 'GB']:
+    for unit in ["B", "KB", "MB", "GB"]:
         if bytes_ < 1024.0:
             return f"{bytes_:3.1f} {unit}"
         bytes_ /= 1024.0

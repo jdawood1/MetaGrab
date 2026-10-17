@@ -1,8 +1,8 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget
+from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
+from app.ui.audio_editor.audio_combiner.combiner_tab import CombineAudioTab
 from app.ui.audio_editor.editing_tools.editing_tools_tab import EditingToolsTab
 from app.ui.audio_editor.meta_tags.metadata_tab import MetadataTab
-from app.ui.audio_editor.audio_combiner.combiner_tab import CombineAudioTab
 
 
 class AudioEditorWindow(QWidget):

@@ -1,11 +1,14 @@
 import logging
 import traceback
-from PySide6.QtCore import QRunnable, Signal, QObject
+
+from PySide6.QtCore import QObject, QRunnable, Signal
 from PySide6.QtWidgets import QApplication
+
 from app.core import settings
 
 # Global shutdown safety
 active_tor_runnables = set()
+
 
 class TorControlSignals(QObject):
     finished = Signal(bool, str)  # success, message
@@ -14,7 +17,9 @@ class TorControlSignals(QObject):
 class TorControlRunnable(QRunnable):
     _latest_id = 0  # class-level counter to track the newest runnable
 
-    def __init__(self, tor_manager, mode="start", exit_country=None, exit_label=None, bridge_enabled=None):
+    def __init__(
+        self, tor_manager, mode="start", exit_country=None, exit_label=None, bridge_enabled=None
+    ):
         super().__init__()
         self.tor_manager = tor_manager
         self.mode = mode  # "start", "stop", "switch", or "bridge"

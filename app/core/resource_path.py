@@ -4,11 +4,12 @@ from pathlib import Path
 
 class AssetNotFoundError(Exception):
     """Custom exception for missing assets."""
+
     pass
 
 
 # Determine the project root based on runtime context
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     # When running as a frozen/packaged app (e.g., with PyInstaller)
     PROJECT_ROOT = Path(sys._MEIPASS)
 else:
@@ -35,4 +36,3 @@ def resource_path(relative_path: str) -> str:
         raise AssetNotFoundError(f"Asset not found: {full_path}")
 
     return str(full_path)
-

@@ -1,18 +1,24 @@
+from PySide6.QtCore import QPoint, QSize, QThreadPool
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
-    QWidget, QLabel, QHBoxLayout, QVBoxLayout,
-    QPushButton, QCheckBox, QComboBox, QFrame
+    QCheckBox,
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import QThreadPool, QPoint, QSize
 
 from app.core import settings
 from app.core.resource_path import resource_path
+from app.systems.tor_system.bridge_clipboard import BridgeGrabber
 from app.ui.topbar_widget.utils.ip_monitor import IPMonitorWidget
-from app.ui.topbar_widget.utils.vpn_button import VPNAlertWidget
-from app.ui.topbar_widget.utils.tor_switches import TorControlRunnable
 from app.ui.topbar_widget.utils.obfs4proxy_alert import Obfs4MissingAlert
 from app.ui.topbar_widget.utils.tor_missing_alert import TorMissingAlert
-from app.systems.tor_system.bridge_clipboard import BridgeGrabber
+from app.ui.topbar_widget.utils.tor_switches import TorControlRunnable
+from app.ui.topbar_widget.utils.vpn_button import VPNAlertWidget
 
 
 class TopBarMenu(QWidget):
@@ -70,7 +76,9 @@ class TopBarMenu(QWidget):
 
         if self.tor_alert.check_and_show():
             self.tor_checkbox.setEnabled(False)
-            self.tor_checkbox.setToolTip("Tor is not installed. Please install it to enable this option.")
+            self.tor_checkbox.setToolTip(
+                "Tor is not installed. Please install it to enable this option."
+            )
             self.tor_info_button = QPushButton("⚠️")
             self.tor_info_button.setStyleSheet("QPushButton { background: transparent; }")
             self.tor_info_button.setToolTip("Click to view Tor installation instructions.")
@@ -118,7 +126,9 @@ class TopBarMenu(QWidget):
 
         if self.obfs4_alert.check_and_show():
             self.bridge_mode_checkbox.setEnabled(False)
-            self.bridge_mode_checkbox.setToolTip("obfs4proxy not detected — required for Bridge Mode.")
+            self.bridge_mode_checkbox.setToolTip(
+                "obfs4proxy not detected — required for Bridge Mode."
+            )
 
         exit_controls_layout.addWidget(QLabel("🌐 Exit Location:"))
         exit_controls_layout.addWidget(self.exit_country_selector)
@@ -134,21 +144,49 @@ class TopBarMenu(QWidget):
     def _populate_country_selector(self):
         countries = {
             # Existing countries
-            "🇺🇸 United States": "us", "🇩🇪 Germany": "de", "🇳🇱 Netherlands": "nl",
-            "🇨🇦 Canada": "ca", "🇬🇧 United Kingdom": "gb", "🇫🇷 France": "fr",
-            "🇸🇪 Sweden": "se", "🇨🇭 Switzerland": "ch", "🇳🇴 Norway": "no",
-            "🇫🇮 Finland": "fi", "🇯🇵 Japan": "jp", "🇪🇸 Spain": "es",
-            "🇮🇹 Italy": "it", "🇧🇪 Belgium": "be", "🇦🇺 Australia": "au",
-            "🇩🇰 Denmark": "dk", "🇵🇱 Poland": "pl", "🇧🇷 Brazil": "br",
-            "🇮🇳 India": "in", "🇸🇬 Singapore": "sg", "🇷🇺 Russia": "ru",
+            "🇺🇸 United States": "us",
+            "🇩🇪 Germany": "de",
+            "🇳🇱 Netherlands": "nl",
+            "🇨🇦 Canada": "ca",
+            "🇬🇧 United Kingdom": "gb",
+            "🇫🇷 France": "fr",
+            "🇸🇪 Sweden": "se",
+            "🇨🇭 Switzerland": "ch",
+            "🇳🇴 Norway": "no",
+            "🇫🇮 Finland": "fi",
+            "🇯🇵 Japan": "jp",
+            "🇪🇸 Spain": "es",
+            "🇮🇹 Italy": "it",
+            "🇧🇪 Belgium": "be",
+            "🇦🇺 Australia": "au",
+            "🇩🇰 Denmark": "dk",
+            "🇵🇱 Poland": "pl",
+            "🇧🇷 Brazil": "br",
+            "🇮🇳 India": "in",
+            "🇸🇬 Singapore": "sg",
+            "🇷🇺 Russia": "ru",
             "🇦🇶 Antarctica": "aq",
-
             # Newly added countries
-            "🇦🇹 Austria": "at", "🇮🇪 Ireland": "ie", "🇵🇹 Portugal": "pt", "🇬🇷 Greece": "gr",
-            "🇨🇿 Czech Republic": "cz", "🇭🇺 Hungary": "hu", "🇺🇦 Ukraine": "ua", "🇷🇴 Romania": "ro",
-            "🇲🇽 Mexico": "mx", "🇦🇷 Argentina": "ar", "🇨🇱 Chile": "cl", "🇨🇴 Colombia": "co",
-            "🇰🇷 South Korea": "kr", "🇹🇭 Thailand": "th", "🇮🇩 Indonesia": "id", "🇹🇷 Turkey": "tr",
-            "🇮🇱 Israel": "il", "🇿🇦 South Africa": "za", "🇳🇿 New Zealand": "nz", "🇮🇸 Iceland": "is"
+            "🇦🇹 Austria": "at",
+            "🇮🇪 Ireland": "ie",
+            "🇵🇹 Portugal": "pt",
+            "🇬🇷 Greece": "gr",
+            "🇨🇿 Czech Republic": "cz",
+            "🇭🇺 Hungary": "hu",
+            "🇺🇦 Ukraine": "ua",
+            "🇷🇴 Romania": "ro",
+            "🇲🇽 Mexico": "mx",
+            "🇦🇷 Argentina": "ar",
+            "🇨🇱 Chile": "cl",
+            "🇨🇴 Colombia": "co",
+            "🇰🇷 South Korea": "kr",
+            "🇹🇭 Thailand": "th",
+            "🇮🇩 Indonesia": "id",
+            "🇹🇷 Turkey": "tr",
+            "🇮🇱 Israel": "il",
+            "🇿🇦 South Africa": "za",
+            "🇳🇿 New Zealand": "nz",
+            "🇮🇸 Iceland": "is",
         }
 
         for label, code in countries.items():
@@ -180,10 +218,7 @@ class TopBarMenu(QWidget):
         exit_label = self.exit_country_selector.itemText(index)
 
         runnable = TorControlRunnable(
-            self.tor_manager,
-            mode="switch",
-            exit_country=exit_country,
-            exit_label=exit_label
+            self.tor_manager, mode="switch", exit_country=exit_country, exit_label=exit_label
         )
         runnable.signals.finished.connect(self._on_tor_signal)
         self.thread_pool.start(runnable)
@@ -194,10 +229,7 @@ class TopBarMenu(QWidget):
         exit_label = self.exit_country_selector.itemText(index)
 
         runnable = TorControlRunnable(
-            self.tor_manager,
-            mode="start",
-            exit_country=exit_country,
-            exit_label=exit_label
+            self.tor_manager, mode="start", exit_country=exit_country, exit_label=exit_label
         )
         runnable.signals.finished.connect(self._on_tor_signal)
         self.thread_pool.start(runnable)
@@ -222,7 +254,9 @@ class TopBarMenu(QWidget):
         if not hasattr(self, "bridge_window") or self.bridge_window is None:
             self.bridge_window = BridgeGrabber(self)
 
-        global_pos = self.get_bridges_button.mapToGlobal(QPoint(0, self.get_bridges_button.height()))
+        global_pos = self.get_bridges_button.mapToGlobal(
+            QPoint(0, self.get_bridges_button.height())
+        )
         self.bridge_window.move(global_pos)
         self.bridge_window.show()
         self.bridge_window.raise_()
@@ -239,7 +273,7 @@ class TopBarMenu(QWidget):
             mode="bridge",
             exit_country=exit_country,
             exit_label=exit_label,
-            bridge_enabled=bool(state)
+            bridge_enabled=bool(state),
         )
         runnable.signals.finished.connect(self._on_tor_signal)
         self.thread_pool.start(runnable)

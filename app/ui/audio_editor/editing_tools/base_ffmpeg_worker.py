@@ -1,6 +1,7 @@
+import subprocess
+
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QApplication
-import subprocess
 
 from app.core.logger import logger
 
@@ -49,7 +50,9 @@ class BaseFFmpegWorker(QThread):
                 if stderr_output:
                     logger.debug(f"[{self.__class__.__name__}] FFmpeg stderr:\n{stderr_output}")
 
-            logger.info(f"[{self.__class__.__name__}] Finished: {'Success' if success else 'Failure'} - {self.output_path}")
+            logger.info(
+                f"[{self.__class__.__name__}] Finished: {'Success' if success else 'Failure'} - {self.output_path}"
+            )
             self._emit_safe(self.finished, success, self.output_path)
 
         except Exception as e:

@@ -1,6 +1,7 @@
 import os
-from mutagen.easyid3 import EasyID3
+
 import mutagen.id3
+from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 
 
@@ -12,20 +13,20 @@ class MetadataEmbedder:
                 raise FileNotFoundError(f"Cover image not found: {cover_image_path}")
 
     def embed_metadata(
-            self,
-            file_path: str,
-            title: str = "",
-            artist: str = "",
-            album: str = "",
-            album_artist: str = "",
-            genre: str = "",
-            year: str = "",
-            track_number: str = "",
-            composer: str = "",
-            comment: str = "",
-            explicit: str = "",
-            bpm: str = "",
-            lyrics: str = ""
+        self,
+        file_path: str,
+        title: str = "",
+        artist: str = "",
+        album: str = "",
+        album_artist: str = "",
+        genre: str = "",
+        year: str = "",
+        track_number: str = "",
+        composer: str = "",
+        comment: str = "",
+        explicit: str = "",
+        bpm: str = "",
+        lyrics: str = "",
     ) -> bool:
         try:
             if not os.path.isfile(file_path):
@@ -42,14 +43,22 @@ class MetadataEmbedder:
 
             # Standard EasyID3 tags
             audio = EasyID3(file_path)
-            if title: audio["title"] = title
-            if artist: audio["artist"] = artist
-            if album: audio["album"] = album
-            if genre: audio["genre"] = genre
-            if year: audio["date"] = year
-            if track_number: audio["tracknumber"] = track_number
-            if composer: audio["composer"] = composer
-            if bpm: audio["bpm"] = bpm
+            if title:
+                audio["title"] = title
+            if artist:
+                audio["artist"] = artist
+            if album:
+                audio["album"] = album
+            if genre:
+                audio["genre"] = genre
+            if year:
+                audio["date"] = year
+            if track_number:
+                audio["tracknumber"] = track_number
+            if composer:
+                audio["composer"] = composer
+            if bpm:
+                audio["bpm"] = bpm
             audio.save()
 
             # Extended ID3 tags
@@ -63,7 +72,6 @@ class MetadataEmbedder:
             if comment:
                 id3.add(mutagen.id3.COMM(encoding=3, lang="eng", desc="", text=comment))
 
-
             if explicit:
                 id3.add(mutagen.id3.TXXX(encoding=3, desc="explicit", text=explicit))
 
@@ -72,13 +80,11 @@ class MetadataEmbedder:
 
             if self.cover_image_path:
                 with open(self.cover_image_path, "rb") as img:
-                    id3.add(mutagen.id3.APIC(
-                        encoding=3,
-                        mime="image/jpeg",
-                        type=3,
-                        desc="Cover",
-                        data=img.read()
-                    ))
+                    id3.add(
+                        mutagen.id3.APIC(
+                            encoding=3, mime="image/jpeg", type=3, desc="Cover", data=img.read()
+                        )
+                    )
 
             id3.save(v2_version=3)
             print(f"Metadata embedded into: {file_path}")
@@ -106,7 +112,7 @@ class MetadataEmbedder:
                     comment=meta.get("comment", ""),
                     explicit=meta.get("explicit", ""),
                     bpm=meta.get("bpm", ""),
-                    lyrics=meta.get("lyrics", "")
+                    lyrics=meta.get("lyrics", ""),
                 )
                 if not success:
                     failed.append(meta["file_path"])

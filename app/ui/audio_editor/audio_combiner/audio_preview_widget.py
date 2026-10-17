@@ -1,8 +1,9 @@
-from PySide6.QtGui import QColor, QPainter
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSlider
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-from PySide6.QtCore import QUrl, Qt, QTimer, QThreadPool
 from pathlib import Path
+
+from PySide6.QtCore import Qt, QThreadPool, QTimer, QUrl
+from PySide6.QtGui import QColor, QPainter
+from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSlider, QVBoxLayout, QWidget
 
 from app.ui.audio_editor.audio_combiner.preview_build_worker import PreviewBuildWorker
 
@@ -33,6 +34,7 @@ class SeekBar(QSlider):
             painter.setPen(QColor(255, 80, 80))
             painter.drawLine(x, bar_rect.height() // 4, x, bar_rect.height() * 3 // 4)
         painter.end()
+
 
 class AudioPreviewWidget(QWidget):
     def __init__(self, parent=None):
@@ -164,7 +166,9 @@ class AudioPreviewWidget(QWidget):
         self.media_player.stop()
 
     def _update_button_text(self):
-        self.play_btn.setText("Pause" if self.media_player.playbackState() == QMediaPlayer.PlayingState else "Play")
+        self.play_btn.setText(
+            "Pause" if self.media_player.playbackState() == QMediaPlayer.PlayingState else "Play"
+        )
 
     def _prepare_seek(self, direction):
         self.seek_direction = direction
@@ -255,6 +259,6 @@ class AudioPreviewWidget(QWidget):
             self.media_player.play()
 
     def clear_preview(self):
-            self.stop_audio()
-            self.set_audio_file("")
-            self.seek_slider.set_markers([])
+        self.stop_audio()
+        self.set_audio_file("")
+        self.seek_slider.set_markers([])

@@ -2,20 +2,29 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from PySide6.QtCore import QEvent, QFileInfo, QObject, QPoint, Qt
+from PySide6.QtGui import QColor, QCursor, QGuiApplication
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QListWidgetItem, QApplication, QFileIconProvider
+    QApplication,
+    QFileDialog,
+    QFileIconProvider,
+    QHBoxLayout,
+    QLabel,
+    QListWidgetItem,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, QPoint, QEvent, QObject, QFileInfo
-from PySide6.QtGui import QCursor, QGuiApplication, QColor
 from send2trash import send2trash
+
+from app.core import settings
 from app.core.logger import logger
-from app.core.settings import ORIGINALS_DIR, EXPORTS_DIR
-from app.ui.dialog_box_builder import show_info, confirm_overwrite
-from app.ui.folders_tab.utils.drag_n_drop import DropTargetButton
+from app.ui.dialog_box_builder import confirm_overwrite, show_info
+from app.ui.folders_tab.utils.drag_n_drop import DropTargetButton, FileListWidget
 from app.ui.folders_tab.utils.preview_box import PreviewBox
-from app.ui.folders_tab.utils.drag_n_drop import FileListWidget
 from app.ui.folders_tab.utils.right_click import ContextMenuHandler
+
 
 class GlobalClickFilter(QObject):
     def __init__(self, preview_box):
@@ -34,8 +43,8 @@ class FolderWindow(QWidget):
         super().__init__()
         self.setObjectName("FolderWindow")
 
-        self.originals_dir = ORIGINALS_DIR
-        self.exports_dir = EXPORTS_DIR
+        self.originals_dir = settings.ORIGINALS_DIR
+        self.exports_dir = settings.EXPORTS_DIR
         self.last_custom_dir = None
         self.current_dir = self.exports_dir
 
@@ -66,7 +75,10 @@ class FolderWindow(QWidget):
         self.toggle_exports_btn.fileDropped.connect(self.handle_external_drop)
         self.toggle_originals_btn.fileDropped.connect(self.handle_external_drop)
 
+        self.choose_folder_button = QPushButton("Choose download folder…")
+        self.choose_folder_button.clicked.connect(self.choose_export_folder)
         nav_row.addWidget(self.back_button)
+        nav_row.addWidget(self.choose_folder_button)
         nav_row.addStretch()
         nav_row.addWidget(self.toggle_exports_btn)
         nav_row.addWidget(self.toggle_originals_btn)
@@ -77,6 +89,11 @@ class FolderWindow(QWidget):
         self.header.setObjectName("HeaderLabel")
         self.header.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.header)
+
+        self.folder_status = QLabel()
+        self.folder_status.setWordWrap(True)
+        self.folder_status.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(self.folder_status)
 
         # File List
         self.list_widget = FileListWidget(self)
@@ -107,17 +124,52 @@ class FolderWindow(QWidget):
         self.refresh_button.clicked.connect(self.refresh_list)
         self.delete_button.clicked.connect(self.delete_selected)
 
+    def choose_export_folder(self):
+        chosen = QFileDialog.getExistingDirectory(
+            self, "Choose download folder", str(self.exports_dir.parent)
+        )
+        if not chosen:
+            return
+        try:
+            directory = settings.set_exports_dir(chosen)
+        except OSError as exc:
+            QMessageBox.warning(
+                self, "Folder unavailable", f"Choose a readable, writable folder.\n{exc}"
+            )
+            return
+        self.exports_dir = directory
+        self.toggle_exports_btn.folder_path = directory
+        self.current_dir = directory
+        self.refresh_list()
+
     def refresh_list(self):
+        self.folder_status.setText(str(self.current_dir))
+        try:
+            self._refresh_list()
+        except OSError as exc:
+            self.list_widget.clear()
+            self.header.setText("Folder access needed")
+            self.folder_status.setText(
+                f"Cannot access {self.current_dir}. Choose a download folder, or grant folder access "
+                "in macOS System Settings → Privacy & Security, then click Refresh."
+            )
+            logger.warning(f"Folder unavailable: {self.current_dir}: {exc}")
+
+    def _refresh_list(self):
         self.last_hovered_item = None
         self.list_widget.clear()
 
         if not self.current_dir.exists():
             logger.warning(f"Directory not found: {self.current_dir}")
+            self.folder_status.setText(
+                f"Folder is missing: {self.current_dir}. Choose a download folder."
+            )
             self.list_widget.addItem("(Folder is missing)")
             return
 
         entries = [
-            f for f in self.current_dir.iterdir()
+            f
+            for f in self.current_dir.iterdir()
             if not f.name.startswith(".") and not f.name.startswith("~$")
         ]
 
@@ -143,7 +195,6 @@ class FolderWindow(QWidget):
             self.list_widget.addItem(item)
 
         self.header.setText(self.current_dir.name)
-
 
     def selected_file_path(self) -> Path | None:
         item = self.list_widget.currentItem()

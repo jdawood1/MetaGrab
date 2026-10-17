@@ -11,14 +11,11 @@ class Obfs4MissingAlert(DependencyAlert):
                 {
                     "label": "1. Install Homebrew if not installed (Apple Silicon Macs):",
                     "command": '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"',
-                    "height": 50
+                    "height": 50,
                 },
-                {
-                    "label": "2. Then install obfs4proxy:",
-                    "command": "brew install obfs4proxy"
-                }
+                {"label": "2. Then install obfs4proxy:", "command": "brew install obfs4proxy"},
             ],
             button_text="🌐 View Tor Docs on obfs4proxy",
             help_url="https://2019.www.torproject.org/docs/pluggable-transports.html.en#obfs4proxy",
-            parent=parent
+            parent=parent,
         )

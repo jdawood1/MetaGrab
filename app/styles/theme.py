@@ -1,9 +1,11 @@
 # app/styles/theme.py
 
 from PySide6.QtWidgets import QApplication
+
 from app.core.resource_path import resource_path
 
 _current_theme = "dark"  # private module-level variable
+
 
 def apply_theme(app: QApplication, theme: str = "dark") -> None:
     """
@@ -19,6 +21,7 @@ def apply_theme(app: QApplication, theme: str = "dark") -> None:
     except FileNotFoundError:
         print(f"[Theme] Warning: Theme '{theme}' not found. Skipping style application.")
 
+
 def toggle_theme(app: QApplication) -> str:
     """
     Toggles between dark and light themes.
@@ -26,6 +29,7 @@ def toggle_theme(app: QApplication) -> str:
     new_theme = "light" if _current_theme == "dark" else "dark"
     apply_theme(app, new_theme)
     return new_theme
+
 
 def current_theme() -> str:
     """

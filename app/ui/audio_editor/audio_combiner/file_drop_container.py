@@ -1,9 +1,14 @@
-from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QSpacerItem, QSizePolicy, QToolButton
+    QHBoxLayout,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Signal, Qt
 
 from app.core.resource_path import resource_path
 from app.ui.audio_editor.audio_combiner.file_drop_widget import FileDropWidget
@@ -39,7 +44,6 @@ class FileDropContainer(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(20)
 
-
         # Top bar with the Clear All button
         top_bar = QHBoxLayout()
         top_bar.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
@@ -58,6 +62,7 @@ class FileDropContainer(QWidget):
         # Hover events to change icon color
         def enter_event(_):
             self.clear_button.setIcon(colored_icon(icon_path, QColor("red")))
+
         def leave_event(_):
             self.clear_button.setIcon(colored_icon(icon_path, QColor("white")))
 

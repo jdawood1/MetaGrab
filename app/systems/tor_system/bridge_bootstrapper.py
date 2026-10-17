@@ -1,13 +1,15 @@
 # app/systems/tor_system/bridge_bootstrapper.py
 
-from app.core import settings
-from app.core.logger import logger
+import os
 import shutil
 import subprocess
-import os
+
+from app.core import settings
+from app.core.logger import logger
 
 TOR_PATH = shutil.which("tor")
 OBFS4_PATH = shutil.which("obfs4proxy")
+
 
 def build_bridge_config():
     if not settings.TOR_BRIDGE_FILE.exists():
@@ -38,6 +40,7 @@ def build_bridge_config():
 
     return base_config
 
+
 def start_tor_with_bridges():
     if not TOR_PATH:
         raise FileNotFoundError("Tor binary not found. Please install Tor.")
@@ -54,5 +57,5 @@ def start_tor_with_bridges():
         [TOR_PATH, "-f", str(settings.TOR_RC_FILE)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        text=True
+        text=True,
     )

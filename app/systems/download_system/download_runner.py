@@ -1,0 +1,46 @@
+"""Isolated yt-dlp process: a retry always loads the newly installed version."""
+
+import json
+import sys
+
+from app.systems.download_system.anizone import create_downloader
+
+
+def emit(kind, payload):
+    print(json.dumps({"kind": kind, "payload": payload}), flush=True)
+
+
+class DownloadLogger:
+    def debug(self, message):
+        pass
+
+    def warning(self, message):
+        emit("warning", message)
+
+    def error(self, message):
+        emit("error", message)
+
+
+def main():
+    request = json.loads(sys.stdin.readline())
+    options = request["options"]
+
+    def hook(data):
+        emit("progress", {key: data.get(key) for key in ("status", "_percent_str")})
+
+    options["progress_hooks"] = [hook]
+    options["logger"] = DownloadLogger()
+    try:
+        with create_downloader(options) as downloader:
+            result = downloader.download([request["url"]])
+        if result:
+            emit("error", "Downloader returned an unsuccessful result.")
+            return 1
+        return 0
+    except Exception as exc:
+        emit("error", str(exc))
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

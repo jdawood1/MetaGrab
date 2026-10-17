@@ -1,13 +1,22 @@
 import shutil
 import webbrowser
-from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QLabel, QPushButton, QPlainTextEdit
-)
+
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFrame, QLabel, QPlainTextEdit, QPushButton, QVBoxLayout
 
 
 class DependencyAlert(QFrame):
-    def __init__(self, *, object_name, check_binary, message, install_steps, button_text, help_url, parent=None):
+    def __init__(
+        self,
+        *,
+        object_name,
+        check_binary,
+        message,
+        install_steps,
+        button_text,
+        help_url,
+        parent=None,
+    ):
         super().__init__(parent)
         self.setObjectName(object_name)
         self.setProperty("class", "DependencyAlert")

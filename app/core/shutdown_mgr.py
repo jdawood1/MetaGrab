@@ -1,9 +1,10 @@
 import time
 from typing import Callable, List
+
 from app.core.logger import logger
-from app.ui.topbar_widget.utils.tor_switches import active_tor_runnables
 from app.systems.download_system.download_worker import active_download_threads
 from app.ui.audio_editor.editing_tools.audio_workers import active_audio_threads
+from app.ui.topbar_widget.utils.tor_switches import active_tor_runnables
 
 
 class ShutdownManager:
@@ -30,7 +31,9 @@ class ShutdownManager:
             time.sleep(0.1)
 
         if active_tor_runnables:
-            logger.warning(f"TorControl: {len(active_tor_runnables)} thread(s) still active at shutdown.")
+            logger.warning(
+                f"TorControl: {len(active_tor_runnables)} thread(s) still active at shutdown."
+            )
         else:
             logger.debug("TorControl: All threads exited cleanly.")
 
@@ -57,7 +60,9 @@ class ShutdownManager:
         start = time.time()
 
         for worker in list(active_audio_threads):
-            logger.warning(f"ShutdownManager: Cancelling active audio thread for: {worker.output_path}")
+            logger.warning(
+                f"ShutdownManager: Cancelling active audio thread for: {worker.output_path}"
+            )
             worker.stop()
 
         while active_audio_threads and (time.time() - start) < timeout:
@@ -67,7 +72,6 @@ class ShutdownManager:
             logger.warning(f"{len(active_audio_threads)} audio thread(s) still active at shutdown.")
         else:
             logger.debug("All audio threads finished before shutdown.")
-
 
     def shutdown(self):
         logger.info("ShutdownManager: Running pre-shutdown tasks...")

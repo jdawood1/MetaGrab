@@ -1,8 +1,8 @@
+import faulthandler
 import os
+import signal
 import sys
 import traceback
-import faulthandler
-import signal
 
 faulthandler.enable()
 
@@ -10,18 +10,20 @@ faulthandler.enable()
 os.environ["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:" + os.environ.get("PATH", "")
 
 from PySide6.QtWidgets import QApplication
-from app.ui.main_window.central_window import MainWindow
-from app.ui.splash_builder import MediaSplash
+
+from app.core.crash_log import CrashHandler
 
 # Core systems
 from app.core.logger import logger
-from app.core.crash_log import CrashHandler
 from app.core.shutdown_mgr import ShutdownManager
-from app.systems.tor_system.tor_manager import TorManager
 from app.styles.theme import apply_theme
+from app.systems.tor_system.tor_manager import TorManager
+from app.ui.main_window.central_window import MainWindow
+from app.ui.splash_builder import MediaSplash
 
 # Global
 shutdown_manager = ShutdownManager()
+
 
 # Handle Ctrl+C or kill signal
 def _on_interrupt(sig, frame):
@@ -29,7 +31,9 @@ def _on_interrupt(sig, frame):
     shutdown_manager.shutdown()
     sys.exit(0)
 
+
 signal.signal(signal.SIGINT, _on_interrupt)
+
 
 def main():
     CrashHandler.install()
@@ -58,7 +62,7 @@ def main():
             font_size=14,
             italic=True,
             bold=True,
-            color="#00ccff"
+            color="#00ccff",
         )
 
         splash.show()
@@ -70,7 +74,7 @@ def main():
 
         exit_code = app.exec()
 
-    except Exception as e:
+    except Exception:
         logger.error("Exception caught in main loop:")
         logger.error(traceback.format_exc())
 
@@ -84,6 +88,7 @@ def main():
         shutdown_manager.shutdown()
 
     sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()

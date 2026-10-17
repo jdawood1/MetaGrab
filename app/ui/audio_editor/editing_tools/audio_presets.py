@@ -1,28 +1,28 @@
-from typing import Optional
 import re
+from typing import Optional
 
 
 class AudioNormalizePresets:
     """Reusable constants for normalization presets."""
 
     PRESETS = {
-        "Apple Podcast":        {"I": -16, "TP": -1.5, "LRA": 9},
-        "Streaming (Spotify)":  {"I": -14, "TP": -2.0, "LRA": 10},
-        "YouTube":              {"I": -13, "TP": -1.5, "LRA": 11},
-        "Broadcast Standard":   {"I": -23, "TP": -2.0, "LRA": 7},
-        "Audiobooks":           {"I": -18, "TP": -3.0, "LRA": 8},
-        "CD Mastering":         {"I": -11, "TP": -0.1, "LRA": 7},
-        "Max Loudness":         {"I": -9, "TP": -0.1, "LRA": 6},
+        "Apple Podcast": {"I": -16, "TP": -1.5, "LRA": 9},
+        "Streaming (Spotify)": {"I": -14, "TP": -2.0, "LRA": 10},
+        "YouTube": {"I": -13, "TP": -1.5, "LRA": 11},
+        "Broadcast Standard": {"I": -23, "TP": -2.0, "LRA": 7},
+        "Audiobooks": {"I": -18, "TP": -3.0, "LRA": 8},
+        "CD Mastering": {"I": -11, "TP": -0.1, "LRA": 7},
+        "Max Loudness": {"I": -9, "TP": -0.1, "LRA": 6},
     }
 
     PRESET_LABELS = {
-        "Apple Podcast":        "Podcast-ready (Apple)",
-        "Streaming (Spotify)":  "Streaming Optimized (Spotify)",
-        "YouTube":              "Loudness Standard (YouTube)",
-        "Broadcast Standard":   "Broadcast Safe",
-        "Audiobooks":           "Narration / Audiobook",
-        "CD Mastering":         "CD / Studio Mastering",
-        "Max Loudness":         "Maximum Volume (Aggressive)",
+        "Apple Podcast": "Podcast-ready (Apple)",
+        "Streaming (Spotify)": "Streaming Optimized (Spotify)",
+        "YouTube": "Loudness Standard (YouTube)",
+        "Broadcast Standard": "Broadcast Safe",
+        "Audiobooks": "Narration / Audiobook",
+        "CD Mastering": "CD / Studio Mastering",
+        "Max Loudness": "Maximum Volume (Aggressive)",
     }
 
     @classmethod
@@ -39,7 +39,18 @@ class AudioFormatPresets:
     LOSSY_FORMATS = {"mp3", "aac", "ogg", "m4a", "opus", "webm", "amr", "wma"}
     LOSSLESS_FORMATS = {"flac", "wav", "aiff", "alac"}
     FORMATS = [
-        "mp3", "aac", "flac", "opus", "wav", "m4a", "ogg", "webm", "alac", "aiff", "amr", "wma"
+        "mp3",
+        "aac",
+        "flac",
+        "opus",
+        "wav",
+        "m4a",
+        "ogg",
+        "webm",
+        "alac",
+        "aiff",
+        "amr",
+        "wma",
     ]
     CODEC_MAP = {
         "mp3": "libmp3lame",
@@ -53,7 +64,7 @@ class AudioFormatPresets:
         "alac": "alac",
         "aiff": "pcm_s16be",
         "amr": "libopencore_amrnb",
-        "wma": "wmav2"
+        "wma": "wmav2",
     }
 
 
@@ -61,16 +72,17 @@ class AudioFormatPresets:
 # Helper for unified FFmpeg single-pass command
 # ---------------------------------------------
 
+
 def build_ffmpeg_command(
-        input_path: str,
-        output_path: str,
-        crop_start: Optional[float] = None,
-        crop_end: Optional[float] = None,
-        normalize_filter: Optional[str] = None,
-        codec: Optional[str] = "libmp3lame",
-        bitrate: Optional[str] = "192k",
-        sample_rate: Optional[int] = None,
-        channels: Optional[int] = None
+    input_path: str,
+    output_path: str,
+    crop_start: Optional[float] = None,
+    crop_end: Optional[float] = None,
+    normalize_filter: Optional[str] = None,
+    codec: Optional[str] = "libmp3lame",
+    bitrate: Optional[str] = "192k",
+    sample_rate: Optional[int] = None,
+    channels: Optional[int] = None,
 ) -> list[str]:
     """Build a unified FFmpeg command that applies crop, normalize, and conversion in one pass."""
     cmd = ["ffmpeg", "-y"]
@@ -115,6 +127,7 @@ def build_ffmpeg_command(
 # Parse human-readable time formats into seconds.
 # ---------------------------------------------
 
+
 def parse_time_input(time_str: str) -> float:
     """
     Parse human-readable time formats into seconds.
@@ -132,9 +145,7 @@ def parse_time_input(time_str: str) -> float:
     time_str = time_str.strip().lower()
 
     # Match "1h 2m 3.5s" style
-    match = re.match(
-        r'^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+(?:\.\d+)?)s?)?$', time_str
-    )
+    match = re.match(r"^(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:(\d+(?:\.\d+)?)s?)?$", time_str)
     if match:
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)

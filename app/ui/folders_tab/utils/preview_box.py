@@ -1,9 +1,11 @@
 from pathlib import Path
+
+from PySide6.QtCore import QPoint, Qt, QThreadPool, QTimer
 from PySide6.QtWidgets import QFrame, QTextBrowser
-from PySide6.QtCore import Qt, QPoint, QThreadPool, QTimer
 
 from app.ui.folders_tab.utils.folder_preview import summarize_folder
 from app.ui.folders_tab.utils.lufs_preview import start_lufs_analysis
+
 
 class PreviewBox(QFrame):
     def __init__(self, parent=None):
@@ -48,7 +50,9 @@ class PreviewBox(QFrame):
     def show_text_loader(self, base_text="Analyzing"):
         self.loading_base_text = base_text
         self.loading_dot_count = 0
-        self.text_area.setHtml(f"<div style='text-align: left; margin-top: 10px;'>{base_text}</div>")
+        self.text_area.setHtml(
+            f"<div style='text-align: left; margin-top: 10px;'>{base_text}</div>"
+        )
         self._resize_to_content()
         self.loading_timer.start()
 

@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
 from app.core.resource_path import resource_path
+
 
 class SidebarMenu(QWidget):
     """Left sidebar menu for navigation."""
@@ -40,10 +41,18 @@ class SidebarMenu(QWidget):
             self.layout.addWidget(btn)
             self.buttons.append(btn)
 
-        self.browser_btn.clicked.connect(lambda: self.activate_button(self.browser_btn, self.browser_clicked))
-        self.downloads_btn.clicked.connect(lambda: self.activate_button(self.downloads_btn, self.downloads_clicked))
-        self.audio_editor_btn.clicked.connect(lambda: self.activate_button(self.audio_editor_btn, self.audio_editor_clicked))
-        self.video_studio_btn.clicked.connect(lambda: self.activate_button(self.video_studio_btn, self.video_studio_clicked))
+        self.browser_btn.clicked.connect(
+            lambda: self.activate_button(self.browser_btn, self.browser_clicked)
+        )
+        self.downloads_btn.clicked.connect(
+            lambda: self.activate_button(self.downloads_btn, self.downloads_clicked)
+        )
+        self.audio_editor_btn.clicked.connect(
+            lambda: self.activate_button(self.audio_editor_btn, self.audio_editor_clicked)
+        )
+        self.video_studio_btn.clicked.connect(
+            lambda: self.activate_button(self.video_studio_btn, self.video_studio_clicked)
+        )
 
         self.activate_button(self.browser_btn, self.browser_clicked)
 

@@ -1,13 +1,25 @@
 from PySide6.QtWidgets import QListWidgetItem
+
 from app.core.logger import logger
+
 
 class DownloadTaskTracker:
     """Tracks active downloads and updates QListWidget items."""
 
     FORMAT_NAMES = {
-        '1': 'MP3', '2': 'FLAC', '3': 'MP4', '4': 'AudioOnly', '5': 'VideoOnly',
-        '6': 'MKV', '7': 'WEBM', '8': 'AVI', '9': 'MOV', '10': 'M4A', '11': 'OPUS',
-        '12': 'AAC', '13': 'WAV',
+        "1": "MP3",
+        "2": "FLAC",
+        "3": "MP4",
+        "4": "AudioOnly",
+        "5": "VideoOnly",
+        "6": "MKV",
+        "7": "WEBM",
+        "8": "AVI",
+        "9": "MOV",
+        "10": "M4A",
+        "11": "OPUS",
+        "12": "AAC",
+        "13": "WAV",
     }
 
     def __init__(self, name: str, list_widget):
@@ -33,21 +45,18 @@ class DownloadTaskTracker:
         item = QListWidgetItem(f"{task_key} ⏳ Starting...")
         self.list_widget.addItem(item)
 
-        self._tasks[task_key] = {
-            'item': item,
-            'worker': worker
-        }
+        self._tasks[task_key] = {"item": item, "worker": worker}
 
         return task_key
 
     def update_status(self, task_key, message: str):
         entry = self._tasks.get(task_key)
         if entry:
-            current = entry['item'].text()
+            current = entry["item"].text()
             if any(tag in current for tag in ("🔥 Completed", "❌ Failed", "⚠️ Cancelled")):
                 return  # Don't overwrite final states
 
-            entry['item'].setText(f"{task_key} {message}")
+            entry["item"].setText(f"{task_key} {message}")
 
             # Remove cancelled/failed tasks from tracking
             if any(tag in message for tag in ("❌ Failed", "⚠️ Cancelled")):

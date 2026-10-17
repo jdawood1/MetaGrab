@@ -11,14 +11,11 @@ class TorMissingAlert(DependencyAlert):
                 {
                     "label": "1. Install Homebrew if not installed (Apple Silicon Macs):",
                     "command": '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"',
-                    "height": 50
+                    "height": 50,
                 },
-                {
-                    "label": "2. Then install Tor:",
-                    "command": "brew install tor"
-                }
+                {"label": "2. Then install Tor:", "command": "brew install tor"},
             ],
             button_text="🌐 View Tor Daemon Installation Guide",
             help_url="https://support.torproject.org/little-t-tor/install-little-t-tor/",
-            parent=parent
+            parent=parent,
         )

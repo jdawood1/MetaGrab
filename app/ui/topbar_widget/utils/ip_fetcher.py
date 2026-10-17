@@ -1,5 +1,5 @@
-from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 import requests
+from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 
 
 class IPFetchWorkerSignals(QObject):

@@ -2,9 +2,10 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QTextEdit
+
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 
 class CrashHandler:
@@ -44,13 +45,18 @@ class CrashHandler:
     @classmethod
     def _cleanup_old_crash_logs(cls):
         """Keep only the newest 5 crash files."""
-        crash_files = sorted(cls.CRASH_DIR.glob("crash_*.txt"), key=lambda f: f.stat().st_mtime, reverse=True)
-        for old_file in crash_files[cls.MAX_CRASH_FILES:]:
+        crash_files = sorted(
+            cls.CRASH_DIR.glob("crash_*.txt"), key=lambda f: f.stat().st_mtime, reverse=True
+        )
+        for old_file in crash_files[cls.MAX_CRASH_FILES :]:
             try:
                 old_file.unlink()
                 print(f"[MetaGrab Crash] Deleted old crash log: {old_file.name}", file=sys.stderr)
             except Exception as e:
-                print(f"[MetaGrab Crash] Failed to delete old crash log {old_file.name}: {e}", file=sys.stderr)
+                print(
+                    f"[MetaGrab Crash] Failed to delete old crash log {old_file.name}: {e}",
+                    file=sys.stderr,
+                )
 
     @classmethod
     def _show_crash_dialog(cls, crash_file):
@@ -60,7 +66,11 @@ class CrashHandler:
             if app is None:
                 app = QApplication(sys.argv)
 
-            crash_text = crash_file.read_text(encoding="utf-8") if crash_file.exists() else "Crash report unavailable."
+            crash_text = (
+                crash_file.read_text(encoding="utf-8")
+                if crash_file.exists()
+                else "Crash report unavailable."
+            )
 
             crash_window = QWidget()
             crash_window.setWindowTitle("MetaGrab - Crash Detected")
@@ -69,7 +79,10 @@ class CrashHandler:
 
             layout = QVBoxLayout(crash_window)
 
-            label = QLabel("<b>Oops! MetaGrab has crashed.</b><br><br>A crash report has been saved.", crash_window)
+            label = QLabel(
+                "<b>Oops! MetaGrab has crashed.</b><br><br>A crash report has been saved.",
+                crash_window,
+            )
             label.setAlignment(Qt.AlignCenter)
             layout.addWidget(label)
 
@@ -83,7 +96,9 @@ class CrashHandler:
             layout.addWidget(copy_button)
 
             open_folder_button = QPushButton("Open Crash Folder", crash_window)
-            open_folder_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(cls.CRASH_DIR))))
+            open_folder_button.clicked.connect(
+                lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(cls.CRASH_DIR)))
+            )
             layout.addWidget(open_folder_button)
 
             ok_button = QPushButton("OK", crash_window)

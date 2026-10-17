@@ -1,5 +1,6 @@
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMenu, QListWidgetItem
+from PySide6.QtWidgets import QListWidgetItem, QMenu
+
 
 class DownloadContextMenu:
     """Context menu with Clear Selected and Clear All actions for the download list."""

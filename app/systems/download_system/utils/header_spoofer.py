@@ -2,6 +2,7 @@
 
 import random
 
+
 class HeaderSpoofer:
     """Generates randomized spoofed headers for privacy-focused downloading."""
 
@@ -15,7 +16,7 @@ class HeaderSpoofer:
         "Mozilla/5.0 (iPad; CPU OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Mobile/15E148 Safari/604.1",
         "Mozilla/5.0 (Linux; Android 10; SM-G970F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36",
         "Mozilla/5.0 (Linux; Android 11; SM-G998U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0",
     ]
 
     REFERERS = [
@@ -28,7 +29,7 @@ class HeaderSpoofer:
         "https://reddit.com/",
         "https://www.facebook.com/",
         "https://twitter.com/",
-        "https://www.linkedin.com/"
+        "https://www.linkedin.com/",
     ]
 
     ACCEPT_LANGUAGES = [
@@ -41,7 +42,7 @@ class HeaderSpoofer:
         "pt-BR,pt;q=0.9,en;q=0.8",
         "zh-CN,zh;q=0.9,en;q=0.7",
         "ja-JP,ja;q=0.9,en;q=0.7",
-        "ru-RU,ru;q=0.9,en;q=0.7"
+        "ru-RU,ru;q=0.9,en;q=0.7",
     ]
 
     SEC_CH_UA = [
@@ -54,12 +55,20 @@ class HeaderSpoofer:
         '"Safari";v="15", "WebKit";v="605"',
         '"Firefox";v="102", "Gecko";v="20100101"',
         '"Yandex";v="22", "Chromium";v="104"',
-        '"Samsung Internet";v="18", "Chromium";v="103"'
+        '"Samsung Internet";v="18", "Chromium";v="103"',
     ]
 
     SEC_CH_UA_PLATFORM = [
-        '"Windows"', '"macOS"', '"Linux"', '"Android"', '"iOS"',
-        '"ChromeOS"', '"Ubuntu"', '"FreeBSD"', '"Debian"', '"Fedora"'
+        '"Windows"',
+        '"macOS"',
+        '"Linux"',
+        '"Android"',
+        '"iOS"',
+        '"ChromeOS"',
+        '"Ubuntu"',
+        '"FreeBSD"',
+        '"Debian"',
+        '"Fedora"',
     ]
 
     def generate_headers(self):

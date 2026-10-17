@@ -1,5 +1,6 @@
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
 
 def strip_metadata():
     # Always reference file relative to the current script's location
@@ -12,11 +13,14 @@ def strip_metadata():
 
     command = [
         "ffmpeg",
-        "-i", str(input_path),
-        "-map_metadata", "-1",  # Remove all metadata
-        "-c", "copy",           # Copy without re-encoding
+        "-i",
+        str(input_path),
+        "-map_metadata",
+        "-1",  # Remove all metadata
+        "-c",
+        "copy",  # Copy without re-encoding
         str(output_path),
-        "-y"                    # Overwrite output
+        "-y",  # Overwrite output
     ]
 
     try:
@@ -26,9 +30,9 @@ def strip_metadata():
         print("❌ FFmpeg error:")
         print(e.stderr.decode())
 
+
 if __name__ == "__main__":
     try:
         strip_metadata()
     except Exception as e:
         print(f"❌ Error: {e}")
-

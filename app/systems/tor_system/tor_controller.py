@@ -1,19 +1,23 @@
 # app/systems/tor_system/tor_controller.py
 
-import time
-import shutil
-import subprocess
 import os
+import shutil
 import socket
+import subprocess
 import threading
+import time
+
 from stem.control import Controller
-from app.core.logger import logger
+
 from app.core import settings
+from app.core.logger import logger
 
 TOR_PATH = shutil.which("tor")
 
+
 class TorBootstrapError(Exception):
     pass
+
 
 class TorController:
     def __init__(self):
@@ -55,7 +59,7 @@ class TorController:
     def is_tor_active(self):
         try:
             with Controller.from_port(port=settings.CONTROL_PORT) as controller:
-                with open(settings.TOR_COOKIE_PATH, 'rb') as f:
+                with open(settings.TOR_COOKIE_PATH, "rb") as f:
                     controller.authenticate(f.read())
                 return controller.get_info("status/circuit-established") == "1"
         except Exception:
@@ -63,6 +67,7 @@ class TorController:
 
     def start(self, exit_country=None):
         from app.systems.tor_system import bridge_bootstrapper
+
         self._cancel_bootstrap = False
 
         if not self.is_tor_installed():
@@ -78,14 +83,12 @@ class TorController:
                 [TOR_PATH, "-f", str(settings.TOR_RC_FILE)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
             )
 
         if self.tor_process.stdout:
             threading.Thread(
-                target=self.stream_tor_output,
-                args=(self.tor_process.stdout,),
-                daemon=True
+                target=self.stream_tor_output, args=(self.tor_process.stdout,), daemon=True
             ).start()
 
         if not self.wait_for_bootstrap():
@@ -127,4 +130,8 @@ class TorController:
             logger.info("TorController: Tor process terminated.")
 
     def is_running(self):
-        return self.tor_process is not None and self.tor_process.poll() is None and self.is_tor_active()
+        return (
+            self.tor_process is not None
+            and self.tor_process.poll() is None
+            and self.is_tor_active()
+        )

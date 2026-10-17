@@ -1,7 +1,9 @@
 import subprocess
 from pathlib import Path
+
 from app.core import settings
 from app.core.logger import logger
+
 
 def process_file(file_path: Path) -> Path | None:
     if not file_path.exists():
@@ -18,7 +20,9 @@ def process_file(file_path: Path) -> Path | None:
         return None
 
     if normalize and not is_mp3:
-        logger.warning(f"Normalization is only supported for MP3 files. Skipping normalization for: {file_path.name}")
+        logger.warning(
+            f"Normalization is only supported for MP3 files. Skipping normalization for: {file_path.name}"
+        )
         if not strip_meta:
             return None
 
@@ -43,6 +47,6 @@ def process_file(file_path: Path) -> Path | None:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         logger.info(f"File processed → {output_path.name}")
         return output_path
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         logger.error(f"❌ FFmpeg failed on {file_path.name}")
         raise

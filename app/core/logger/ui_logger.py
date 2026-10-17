@@ -1,5 +1,7 @@
-from PySide6.QtGui import QTextCursor, QTextCharFormat, QColor
 import threading
+
+from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
+
 
 class UILogger:
     MAX_LINES = 2000

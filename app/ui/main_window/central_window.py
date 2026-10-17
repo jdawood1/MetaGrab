@@ -1,16 +1,22 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
-    QStackedWidget, QSplitter
+    QHBoxLayout,
+    QMainWindow,
+    QSplitter,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
 )
+
 from app.core.settings import APP_NAME, APP_VERSION
-from app.ui.folders_tab.folder_window import FolderWindow
-from app.ui.downloads_tab.download_window import DownloadsWindow
 from app.ui.audio_editor.audio_editor_window import AudioEditorWindow
+from app.ui.downloads_tab.download_window import DownloadsWindow
+from app.ui.folders_tab.folder_window import FolderWindow
+from app.ui.main_window.console_box import ConsoleOutput
 from app.ui.main_window.sidebar_menu import SidebarMenu
 from app.ui.main_window.video_tab_placeholder import VideoStudioPlaceholder
 from app.ui.topbar_widget.topbar_widget import TopBarMenu
-from app.ui.main_window.console_box import ConsoleOutput
+
 
 class MainWindow(QMainWindow):
     """The main window of MetaGrab."""

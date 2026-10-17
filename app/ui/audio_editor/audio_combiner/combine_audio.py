@@ -3,7 +3,9 @@ import subprocess
 import tempfile
 from pathlib import Path
 from typing import List
+
 from PySide6.QtCore import QThread, Signal
+
 from app.core.logger import logger
 
 
@@ -17,7 +19,7 @@ class AudioCombiner:
             return False
 
         try:
-            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix=".txt") as list_file:
+            with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as list_file:
                 for input_file in inputs:
                     abs_path = Path(input_file).resolve()
                     safe_path = abs_path.as_posix().replace("'", "'\\''")
@@ -25,11 +27,17 @@ class AudioCombiner:
                 list_file_path = list_file.name
 
             cmd = [
-                "ffmpeg", "-y",
-                "-f", "concat", "-safe", "0",
-                "-i", list_file_path,
-                "-c", "copy",
-                output_path
+                "ffmpeg",
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                list_file_path,
+                "-c",
+                "copy",
+                output_path,
             ]
 
             logger.info(f"AudioCombiner: Combining {len(inputs)} files into {output_path}")

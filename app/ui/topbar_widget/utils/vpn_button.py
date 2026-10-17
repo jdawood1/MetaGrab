@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QPushButton
-from PySide6.QtCore import Qt, QTimer
-import requests
 import webbrowser
+
+import requests
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
 from app.core import settings
 
@@ -45,13 +46,17 @@ class VPNAlertWidget(QWidget):
 
         if not home_ip:
             self.button.setText("⚠️ VPN Check Disabled")
-            self.button.setToolTip("VPN status cannot be determined.\nPlease set your Home IP in the IP Monitor.")
+            self.button.setToolTip(
+                "VPN status cannot be determined.\nPlease set your Home IP in the IP Monitor."
+            )
             self.button.setProperty("status", "inactive")
         else:
             public_ip = self._get_public_ip()
             if not public_ip:
                 self.button.setText("🌐 Checking IP...")
-                self.button.setToolTip("Unable to fetch public IP. Please check your internet connection.")
+                self.button.setToolTip(
+                    "Unable to fetch public IP. Please check your internet connection."
+                )
                 self.button.setProperty("status", "inactive")
             else:
                 is_active = public_ip != home_ip

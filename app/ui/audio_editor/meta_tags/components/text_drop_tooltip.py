@@ -1,9 +1,15 @@
 from pathlib import Path
 
-from PySide6.QtWidgets import (
-    QWidget, QToolButton, QDialog, QVBoxLayout, QTextEdit, QPushButton, QMessageBox
-)
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QDialog,
+    QMessageBox,
+    QPushButton,
+    QTextEdit,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class MetadataHelpWidget(QWidget):

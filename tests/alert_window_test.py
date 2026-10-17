@@ -1,5 +1,7 @@
 import sys
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
+
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
+
 from app.styles.theme import apply_theme
 from app.ui.topbar_widget.utils.obfs4proxy_alert import Obfs4MissingAlert
 from app.ui.topbar_widget.utils.tor_missing_alert import TorMissingAlert
@@ -42,6 +44,7 @@ def main():
     window.show()
 
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()

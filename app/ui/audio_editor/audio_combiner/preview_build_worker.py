@@ -1,9 +1,10 @@
-from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 import subprocess
 import tempfile
-from pathlib import Path
-from mutagen.mp3 import MP3
 import traceback
+from pathlib import Path
+
+from mutagen.mp3 import MP3
+from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 
 
 class PreviewWorkerSignals(QObject):
@@ -39,15 +40,20 @@ class PreviewBuildWorker(QRunnable):
                 except Exception:
                     durations.append(0.0)
 
-            cumulative_ms = [
-                int(sum(durations[:i]) * 1000)
-                for i in range(1, len(durations))
-            ]
+            cumulative_ms = [int(sum(durations[:i]) * 1000) for i in range(1, len(durations))]
 
             cmd = [
-                "ffmpeg", "-y", "-f", "concat", "-safe", "0",
-                "-i", str(concat_txt),
-                "-c", "copy", str(preview_mp3)
+                "ffmpeg",
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(concat_txt),
+                "-c",
+                "copy",
+                str(preview_mp3),
             ]
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

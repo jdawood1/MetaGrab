@@ -1,12 +1,20 @@
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QLabel, QLineEdit,
-    QDialogButtonBox, QMessageBox, QWidget
-)
 from pathlib import Path
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QVBoxLayout,
+    QWidget,
+)
 
-def get_text(parent: QWidget, title: str, label: str, initial_text: str = "", width: int = 400) -> str | None:
+
+def get_text(
+    parent: QWidget, title: str, label: str, initial_text: str = "", width: int = 400
+) -> str | None:
     """Text input dialog (e.g., for renaming)."""
     dialog = QDialog(parent)
     dialog.setWindowTitle(title)
@@ -48,11 +56,7 @@ def get_text(parent: QWidget, title: str, label: str, initial_text: str = "", wi
 def get_confirmation(parent: QWidget, title: str, message: str, default=QMessageBox.No) -> bool:
     """Yes/No confirmation dialog."""
     reply = QMessageBox.information(
-        parent,
-        title,
-        message,
-        QMessageBox.Yes | QMessageBox.No,
-        default
+        parent, title, message, QMessageBox.Yes | QMessageBox.No, default
     )
     return reply == QMessageBox.Yes
 
@@ -63,7 +67,7 @@ def confirm_overwrite(parent: QWidget, path: Path) -> bool:
         parent,
         "File Exists",
         f"The file '<b>{path.name}</b>' already exists.<br>Do you want to <span style='color:#FF3B30;'>overwrite</span> it?",
-        default=QMessageBox.No
+        default=QMessageBox.No,
     )
 
 
@@ -73,7 +77,7 @@ def confirm_delete(parent: QWidget, path: Path) -> bool:
         parent,
         "Confirm Delete",
         f"Are you sure you want to delete '<b>{path.name}</b>'?",
-        default=QMessageBox.No
+        default=QMessageBox.No,
     )
 
 

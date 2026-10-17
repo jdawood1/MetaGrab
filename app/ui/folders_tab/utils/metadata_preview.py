@@ -1,8 +1,11 @@
 from pathlib import Path
-from PySide6.QtWidgets import QWidget
+
 import mutagen.id3
 from mutagen.mp3 import MP3
+from PySide6.QtWidgets import QWidget
+
 from app.ui.dialog_box_builder import get_confirmation
+
 
 def get_audio_metadata(file_path: Path, parent: QWidget) -> str:
     if not file_path.exists() or not file_path.is_file():
@@ -45,18 +48,24 @@ def get_audio_metadata(file_path: Path, parent: QWidget) -> str:
                 break
 
         # Lyrics (USLT frame)
-        lyrics_frame = next((frame for frame in audio.tags.values() if isinstance(frame, mutagen.id3.USLT)), None)
+        lyrics_frame = next(
+            (frame for frame in audio.tags.values() if isinstance(frame, mutagen.id3.USLT)), None
+        )
         if lyrics_frame:
-            if get_confirmation(parent, "Lyrics Found", "This file contains embedded lyrics. Show them?"):
+            if get_confirmation(
+                parent, "Lyrics Found", "This file contains embedded lyrics. Show them?"
+            ):
                 info_lines.append("<br><b>Lyrics:</b><br>")
                 safe_lyrics = lyrics_frame.text.strip().replace("\n", "<br>")
                 info_lines.append(f"<i>{safe_lyrics}</i><br>")
 
         # Cover Art (APIC)
         has_cover = any(isinstance(tag, mutagen.id3.APIC) for tag in audio.tags.values())
-        info_lines.append("<br><b>Cover Art:</b> " + ("Image embedded<br>" if has_cover else "Not present<br>"))
+        info_lines.append(
+            "<br><b>Cover Art:</b> " + ("Image embedded<br>" if has_cover else "Not present<br>")
+        )
 
-        return ''.join(info_lines)
+        return "".join(info_lines)
 
     except Exception as e:
         return f"Error reading metadata: {e}"

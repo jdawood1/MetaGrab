@@ -1,14 +1,17 @@
-from PySide6.QtWidgets import QListWidget, QPushButton, QFileIconProvider
-from PySide6.QtCore import QMimeData, QUrl, Qt, Signal, QFileInfo
-from PySide6.QtGui import QDrag
-from pathlib import Path
 import shutil
+from pathlib import Path
+
+from PySide6.QtCore import QFileInfo, QMimeData, Qt, QUrl, Signal
+from PySide6.QtGui import QDrag
+from PySide6.QtWidgets import QFileIconProvider, QListWidget, QPushButton
+
 from app.core.logger import logger
 from app.ui.dialog_box_builder import confirm_overwrite
 
 
 class DropTargetButton(QPushButton):
     """A QPushButton that accepts the file drops and emits a signal."""
+
     fileDropped = Signal(object)  # emits (folder_path, [dropped_file_paths])
 
     def __init__(self, label: str, folder_path, parent=None):
@@ -32,6 +35,7 @@ class DropTargetButton(QPushButton):
 
 class FileListWidget(QListWidget):
     """Custom QListWidget to handle drag-and-drop and right-click preview."""
+
     def __init__(self, parent_window):
         super().__init__()
         self.parent_window = parent_window

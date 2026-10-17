@@ -1,9 +1,11 @@
 # app/systems/tor_system/tor_manager.py
 import atexit
 import subprocess
+
+from app.core import settings
 from app.core.logger import logger
 from app.systems.tor_system.tor_controller import TorController
-from app.core import settings
+
 
 class TorManager:
     def __init__(self):
@@ -39,7 +41,7 @@ class TorManager:
                 ["pkill", "-9", "tor"],
                 check=True,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
             )
             logger.info("TorManager: All Tor processes force-killed.")
         except subprocess.CalledProcessError:

@@ -1,7 +1,9 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QFont
+from PySide6.QtGui import QFont, QPixmap
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+
 from app.core.resource_path import resource_path
+
 
 class VideoStudioPlaceholder(QWidget):
     def __init__(self, parent=None):
@@ -13,7 +15,9 @@ class VideoStudioPlaceholder(QWidget):
 
         try:
             icon_path = resource_path("assets/icons/edit_video.svg")
-            pixmap = QPixmap(icon_path).scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = QPixmap(icon_path).scaled(
+                180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
             icon = QLabel()
             icon.setPixmap(pixmap)
             icon.setAlignment(Qt.AlignCenter)

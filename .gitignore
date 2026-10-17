@@ -18,6 +18,7 @@ venv.bak/
 build/
 dist/
 *.spec
+!MetaGrab.spec
 
 # macOS
 .DS_Store
@@ -32,3 +33,11 @@ dist/
 .idea/
 *.sublime-project
 *.sublime-workspace
+# Development tool caches
+.ruff_cache/
+
+# Local archive helper
+/zip.sh
+
+# Isolated packaging environment
+.venv-build/

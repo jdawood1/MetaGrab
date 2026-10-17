@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QLabel, QFileDialog, QPushButton
-from PySide6.QtGui import QDragEnterEvent, QDropEvent, QMouseEvent, QCursor
-from PySide6.QtCore import Qt, QEvent
+from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QCursor, QDragEnterEvent, QDropEvent, QMouseEvent
+from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton
 
 
 class FileDropWidget(QLabel):
@@ -48,7 +48,6 @@ class FileDropWidget(QLabel):
             }
         """)
 
-
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Enter:
             self.setProperty("hovering", True)
@@ -79,12 +78,11 @@ class FileDropWidget(QLabel):
     def dragLeaveEvent(self, event):
         self._reset_style()
 
-
     def dropEvent(self, event: QDropEvent):
         self._reset_style()
         for url in event.mimeData().urls():
             path = url.toLocalFile()
-            if path.lower().endswith(('.mp3', '.wav', '.flac', '.m4a', '.aac', '.opus')):
+            if path.lower().endswith((".mp3", ".wav", ".flac", ".m4a", ".aac", ".opus")):
                 self.set_file(path)
                 break
 

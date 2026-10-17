@@ -1,12 +1,19 @@
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QFileDialog, QLineEdit, QProgressBar
-)
 from pathlib import Path
+
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QHBoxLayout,
+    QLineEdit,
+    QProgressBar,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
 from app.core.logger import logger
+from app.ui.audio_editor.audio_combiner.audio_preview_widget import AudioPreviewWidget
 from app.ui.audio_editor.audio_combiner.combine_audio import CombineWorker
 from app.ui.audio_editor.audio_combiner.file_drop_container import FileDropContainer
-from app.ui.audio_editor.audio_combiner.audio_preview_widget import AudioPreviewWidget
 
 
 class CombineAudioTab(QWidget):
@@ -77,7 +84,9 @@ class CombineAudioTab(QWidget):
         self.preview_widget.set_preview_files(files)
 
     def browse_output_file(self):
-        initial_dir = str(Path(self.output_path.text()).parent) if self.output_path.text().strip() else ""
+        initial_dir = (
+            str(Path(self.output_path.text()).parent) if self.output_path.text().strip() else ""
+        )
         file_path, _ = QFileDialog.getSaveFileName(
             self, "Save As", initial_dir, "MP3 Files (*.mp3)"
         )

@@ -1,144 +1,144 @@
+"""Build MetaGrab with the isolated, locked macOS build environment."""
+
+import argparse
+import os
+import platform
 import subprocess
-import shutil
 import sys
-import time
 from pathlib import Path
 
-APP_NAME = "MetaGrab"
-ENTRY_SCRIPT = "main.py"
-ICON_FILE = "assets/icon.icns"
-ASSETS_DIR = "assets"
-REQUIREMENTS_FILE = "requirements.txt"
-BUILD_DIRS = ["build", "dist", f"{APP_NAME}.spec"]
-
 PROJECT_ROOT = Path(__file__).resolve().parent
-
-def clean():
-    print("[*] Cleaning previous build artifacts...")
-    for item in BUILD_DIRS:
-        target = PROJECT_ROOT / item
-        if target.exists():
-            if target.is_dir():
-                shutil.rmtree(target)
-            else:
-                target.unlink()
-
-def read_hidden_imports(requirements_file):
-    hidden_imports = []
-    req_path = PROJECT_ROOT / requirements_file
-    if req_path.exists():
-        with open(req_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                package = line.split("~=")[0].strip()
-                hidden_imports.append(f"--hidden-import={package}")
-    return hidden_imports
-
-def install(package):
-    print(f"[*] Installing missing dependency: {package}")
-    subprocess.run([sys.executable, "-m", "pip", "install", package], check=True)
-
-def run_build(hidden_imports):
-    print("[*] Preparing asset bundle...")
-    asset_data_args = []
-
-    # Add critical theme files manually
-    asset_data_args += [
-        "--add-data", "app/styles/dark.qss:app/styles",
-        "--add-data", "app/styles/light.qss:app/styles",
-    ]
-
-    assets_dir = PROJECT_ROOT / ASSETS_DIR
-    if assets_dir.exists():
-        for file_path in assets_dir.rglob("*"):
-            if file_path.is_file():
-                relative_path = file_path.relative_to(PROJECT_ROOT)
-                asset_data_args += [
-                    "--add-data", f"{relative_path}:{relative_path.parent}"
-                ]
-
-    cmd = [
-              sys.executable, "-m", "PyInstaller",
-              "--noconfirm",
-              "--windowed",
-              f"--name={APP_NAME}",
-              f"--icon={PROJECT_ROOT / ICON_FILE}",
-          ] + asset_data_args + hidden_imports + [str(PROJECT_ROOT / ENTRY_SCRIPT)]
+BUILD_ENV = PROJECT_ROOT / ".venv-build"
+BUILD_PYTHON = BUILD_ENV / "bin" / "python"
+LOCK_FILE = PROJECT_ROOT / "requirements-build.lock"
+SPEC_FILE = PROJECT_ROOT / "MetaGrab.spec"
 
 
-    print("[*] Running PyInstaller...")
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    stdout, stderr = process.communicate()
+def build_environment():
+    # Do not inherit IDE helper paths, interpreter overrides, or an activated venv.
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith(("PYTHON", "PYCHARM", "PYDEVD", "JETBRAINS", "IDEA_"))
+        and key not in {"VIRTUAL_ENV", "VIRTUAL_ENV_PROMPT", "__PYVENV_LAUNCHER__"}
+    }
+    environment.update(
+        PYINSTALLER_CONFIG_DIR=str(PROJECT_ROOT / "build/cache"),
+        PYTHONDONTWRITEBYTECODE="1",
+        PYTHONNOUSERSITE="1",
+    )
+    return environment
 
-    if process.returncode != 0:
-        if "No module named 'PIL'" in stderr or "normalize_icon_type" in stderr:
-            raise RuntimeError("MissingPillow")
-        else:
-            print(stdout)
-            print(stderr)
-            raise RuntimeError("BuildFailed")
-    return stdout, stderr
 
-def copy_app_to_desktop():
-    desktop_path = Path.home() / "Desktop"
-    dist_app_path = PROJECT_ROOT / "dist" / f"{APP_NAME}.app"
+def run(command):
+    subprocess.run(command, cwd=PROJECT_ROOT, check=True, env=build_environment())
 
-    if dist_app_path.exists():
-        dest_path = desktop_path / f"{APP_NAME}.app"
-        print(f"[*] Copying app to Desktop: {dest_path}")
-        if dest_path.exists():
-            shutil.rmtree(dest_path)
-        shutil.copytree(dist_app_path, dest_path)
-        print(f"[+] Done: App available on Desktop.")
-    else:
-        print("[!] .app not found — skipping copy.")
 
-def ensure_ffmpeg():
-    if not shutil.which("ffmpeg"):
-        print("[!] ffmpeg not found. Please install it and ensure it’s on your PATH.")
-        sys.exit(1)
+def setup_environment():
+    if sys.version_info[:2] != (3, 11):
+        raise RuntimeError("Use Python 3.11 to create this build environment.")
+    if not LOCK_FILE.is_file():
+        raise RuntimeError("Missing requirements-build.lock; restore it from Git.")
+    if not BUILD_PYTHON.exists():
+        run([sys.executable, "-m", "venv", str(BUILD_ENV)])
+    run([str(BUILD_PYTHON), "-m", "pip", "install", "--requirement", str(LOCK_FILE)])
 
-def ensure_runtime_dirs():
-    try:
-        from app.core import settings
-        for path in [settings.ORIGINALS_DIR, settings.EXPORTS_DIR, settings.LOG_DIR, settings.CONFIG_DIR]:
-            path.mkdir(parents=True, exist_ok=True)
-        print("[*] Verified runtime folders.")
-    except Exception as e:
-        print(f"[!] Could not verify runtime directories: {e}")
-        sys.exit(1)
+
+def check_environment():
+    if not BUILD_PYTHON.is_file():
+        raise RuntimeError("Build environment missing. Run: python3.11 build.py --setup")
+    for name in (
+        "MetaGrab.spec",
+        "requirements-build.lock",
+        "main.py",
+        "assets/icon.icns",
+        "app/styles/dark.qss",
+        "app/styles/light.qss",
+        "app/styles/style.qss",
+        "app/systems/download_system/analysis.py",
+        "app/systems/download_system/analysis_runner.py",
+        "app/systems/download_system/selections.py",
+    ):
+        if not (PROJECT_ROOT / name).is_file():
+            raise RuntimeError(f"Required build input missing: {name}")
+    # Inspect the exact interpreter used for packaging, not a tool elsewhere on PATH.
+    probe = """import importlib.metadata as m
+import pathlib, sys
+from packaging.requirements import Requirement
+assert sys.version_info[:2] == (3, 11), "Build environment must use Python 3.11"
+lines = []
+for filename in sys.argv[1:]:
+    lines.extend(pathlib.Path(filename).read_text().splitlines())
+for line in lines:
+    if not line.strip() or line.startswith("#"):
+        continue
+    req = Requirement(line)
+    if req.marker and not req.marker.evaluate():
+        continue
+    installed = m.version(req.name)
+    assert req.specifier.contains(installed), f"{req.name}: installed {installed}, expected {req.specifier}"
+import PyInstaller, PIL, PySide6, yt_dlp, yt_dlp_ejs
+print("Pinned build environment verified.")
+"""
+    run(
+        [
+            str(BUILD_PYTHON),
+            "-B",
+            "-c",
+            probe,
+            str(LOCK_FILE),
+            str(PROJECT_ROOT / "requirements.txt"),
+            str(PROJECT_ROOT / "requirements-build.txt"),
+        ]
+    )
+    run([str(BUILD_PYTHON), "-m", "pip", "check"])
+
 
 def build():
-    print(f"[*] Starting build for: {APP_NAME}")
-    hidden_imports = read_hidden_imports(REQUIREMENTS_FILE)
+    run(
+        [
+            str(BUILD_PYTHON),
+            "-m",
+            "PyInstaller",
+            "--noconfirm",
+            "--clean",
+            "--distpath",
+            str(PROJECT_ROOT / "dist"),
+            "--workpath",
+            str(PROJECT_ROOT / "build"),
+            str(SPEC_FILE),
+        ]
+    )
+    app = PROJECT_ROOT / "dist" / "MetaGrab.app"
+    if not (app / "Contents/MacOS/MetaGrab").is_file():
+        raise RuntimeError("Build finished without producing the expected app executable.")
+    print(
+        f"\nBuilt: {app}\nExternal tools remain external: FFmpeg/ffprobe, Deno, and optional Tor."
+    )
 
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--setup", action="store_true", help="Install the locked build environment only"
+    )
+    parser.add_argument(
+        "--check", action="store_true", help="Verify inputs and build dependencies only"
+    )
+    args = parser.parse_args()
     try:
-        run_build(hidden_imports)
-    except RuntimeError as e:
-        if str(e) == "MissingPillow":
-            print("[!] Missing Pillow. Installing...")
-            install("pillow")
-            clean()
-            print("[*] Retrying build...")
-            time.sleep(1)
-            run_build(hidden_imports)
-        else:
-            print("[!] Build failed unexpectedly.")
-            sys.exit(1)
+        if platform.system() != "Darwin":
+            raise RuntimeError("The macOS app must be built on macOS.")
+        if args.setup:
+            setup_environment()
+        check_environment()
+        if not args.setup and not args.check:
+            build()
+    except (RuntimeError, subprocess.CalledProcessError, AssertionError) as exc:
+        print(f"Build failed: {exc}", file=sys.stderr)
+        return 1
+    return 0
 
-    print("[+] Build complete.")
-    copy_app_to_desktop()
 
 if __name__ == "__main__":
-    print("[MetaGrab Builder]")
-
-    if not shutil.which("pyinstaller"):
-        print("[*] PyInstaller not found. Installing...")
-        install("pyinstaller")
-
-    ensure_ffmpeg()
-    ensure_runtime_dirs()
-    clean()
-    build()
+    sys.exit(main())

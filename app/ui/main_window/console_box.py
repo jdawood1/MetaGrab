@@ -1,5 +1,7 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit
+from PySide6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
+
 from app.core.logger import logger
+
 
 class ConsoleOutput(QWidget):
     """Live console output widget for status/log messages."""

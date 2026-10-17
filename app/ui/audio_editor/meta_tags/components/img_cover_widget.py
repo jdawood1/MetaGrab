@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QLabel, QFileDialog, QPushButton
-from PySide6.QtGui import QPixmap, QDragEnterEvent, QDropEvent, QMouseEvent, QCursor, QEnterEvent
-from PySide6.QtCore import Qt, QEvent
+from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QCursor, QDragEnterEvent, QDropEvent, QMouseEvent, QPixmap
+from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton
 
 
 class CoverDropWidget(QLabel):
@@ -90,7 +90,7 @@ class CoverDropWidget(QLabel):
         self._refresh_style()
         for url in event.mimeData().urls():
             path = url.toLocalFile()
-            if path.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
+            if path.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                 self.set_cover(path)
                 break
 
@@ -104,17 +104,13 @@ class CoverDropWidget(QLabel):
     def set_cover(self, path: str):
         pixmap = QPixmap(path)
         if not pixmap.isNull():
-            self.setPixmap(pixmap.scaled(
-                self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
-            ))
+            self.setPixmap(pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
             self.setText("")
             self.cover_path = path
 
     def set_pixmap(self, pixmap: QPixmap):
         if not pixmap.isNull():
-            self.setPixmap(pixmap.scaled(
-                self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
-            ))
+            self.setPixmap(pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
             self.setText("")
             self.cover_path = ""
 

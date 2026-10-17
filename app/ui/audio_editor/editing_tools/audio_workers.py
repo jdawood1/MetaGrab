@@ -1,22 +1,33 @@
-import re
 import json
+import re
 import subprocess
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 from app.core.logger import logger
-from app.ui.audio_editor.editing_tools.audio_presets import build_ffmpeg_command, AudioFormatPresets, \
-    AudioNormalizePresets
+from app.ui.audio_editor.editing_tools.audio_presets import (
+    AudioFormatPresets,
+    AudioNormalizePresets,
+    build_ffmpeg_command,
+)
 from app.ui.audio_editor.editing_tools.base_ffmpeg_worker import BaseFFmpegWorker
 
 ENABLE_FORMAT_LOGGING = False
 active_audio_threads = set()
 
+
 class UnifiedProcessWorker(BaseFFmpegWorker):
-    def __init__(self, input_path: str, output_path: str,
-                 crop_start: Optional[float] = None, crop_end: Optional[float] = None,
-                 normalize_filter: Optional[str] = None, codec: Optional[str] = "libmp3lame",
-                 bitrate: Optional[str] = "192k", sample_rate: Optional[int] = 48000,
-                 channels: Optional[int] = 2):
+    def __init__(
+        self,
+        input_path: str,
+        output_path: str,
+        crop_start: Optional[float] = None,
+        crop_end: Optional[float] = None,
+        normalize_filter: Optional[str] = None,
+        codec: Optional[str] = "libmp3lame",
+        bitrate: Optional[str] = "192k",
+        sample_rate: Optional[int] = 48000,
+        channels: Optional[int] = 2,
+    ):
         self.input_path = input_path
         self.output_path = output_path
         self.crop_start = crop_start
@@ -45,10 +56,12 @@ class UnifiedProcessWorker(BaseFFmpegWorker):
                     sample_rate=self.sample_rate,
                     channels=self.channels,
                     logging=ENABLE_FORMAT_LOGGING,
-                    cancel_flag=self.cancelled
+                    cancel_flag=self.cancelled,
                 )
                 if not cmd:
-                    logger.info("[UnifiedProcessWorker] Two-pass normalization was cancelled or failed.")
+                    logger.info(
+                        "[UnifiedProcessWorker] Two-pass normalization was cancelled or failed."
+                    )
                     return  # Don’t call super().run() if first pass was cancelled
 
                 self.cmd = cmd
@@ -62,7 +75,7 @@ class UnifiedProcessWorker(BaseFFmpegWorker):
                     codec=self.codec,
                     bitrate=self.bitrate,
                     sample_rate=self.sample_rate,
-                    channels=self.channels
+                    channels=self.channels,
                 )
 
             ext = self.output_path.lower().split(".")[-1]
@@ -77,10 +90,7 @@ class UnifiedProcessWorker(BaseFFmpegWorker):
 class CropWorker(BaseFFmpegWorker):
     def __init__(self, input_path: str, output_path: str, start_sec: float, end_sec: float):
         cmd = build_ffmpeg_command(
-            input_path=input_path,
-            output_path=output_path,
-            crop_start=start_sec,
-            crop_end=end_sec
+            input_path=input_path, output_path=output_path, crop_start=start_sec, crop_end=end_sec
         )
         super().__init__(cmd, output_path, enable_logging=ENABLE_FORMAT_LOGGING)
         active_audio_threads.add(self)
@@ -110,7 +120,7 @@ class NormalizeWorker(BaseFFmpegWorker):
                     output_path=self.output_path,
                     normalize_filter=self.filter_string,
                     logging=ENABLE_FORMAT_LOGGING,
-                    cancel_flag=self.cancelled
+                    cancel_flag=self.cancelled,
                 )
                 if not cmd:
                     logger.info("[NormalizeWorker] Two-pass normalization was cancelled or failed.")
@@ -121,7 +131,7 @@ class NormalizeWorker(BaseFFmpegWorker):
                 self.cmd = build_ffmpeg_command(
                     input_path=self.input_path,
                     output_path=self.output_path,
-                    normalize_filter=self.filter_string
+                    normalize_filter=self.filter_string,
                 )
 
             super().run()
@@ -130,16 +140,22 @@ class NormalizeWorker(BaseFFmpegWorker):
 
 
 class ConvertWorker(BaseFFmpegWorker):
-    def __init__(self, input_path: str, output_path: str,
-                 codec: Optional[str] = "libmp3lame", bitrate: str = "192k",
-                 sample_rate: Optional[int] = 48000, channels: Optional[int] = 2):
+    def __init__(
+        self,
+        input_path: str,
+        output_path: str,
+        codec: Optional[str] = "libmp3lame",
+        bitrate: str = "192k",
+        sample_rate: Optional[int] = 48000,
+        channels: Optional[int] = 2,
+    ):
         cmd = build_ffmpeg_command(
             input_path=input_path,
             output_path=output_path,
             codec=codec,
             bitrate=bitrate,
             sample_rate=sample_rate,
-            channels=channels
+            channels=channels,
         )
         ext = output_path.lower().split(".")[-1]
         if ext in AudioFormatPresets.LOSSLESS_FORMATS:
@@ -159,10 +175,19 @@ class ConvertWorker(BaseFFmpegWorker):
 def probe_audio(path: str) -> dict:
     try:
         result = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path],
+            [
+                "ffprobe",
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
+                "-show_format",
+                "-show_streams",
+                path,
+            ],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         return json.loads(result.stdout)
     except Exception as e:
@@ -170,19 +195,20 @@ def probe_audio(path: str) -> dict:
             print(f"[ffprobe] Failed: {e}")
         return {}
 
+
 # Two Pass Utility
 def build_two_pass_normalize_command(
-        input_path: str,
-        output_path: str,
-        normalize_filter: str,
-        crop_start: Optional[float] = None,
-        crop_end: Optional[float] = None,
-        codec: Optional[str] = "libmp3lame",
-        bitrate: Optional[str] = "192k",
-        sample_rate: Optional[int] = 48000,
-        channels: Optional[int] = 2,
-        logging: bool = False,
-        cancel_flag: Optional[Callable[[], bool]] = None
+    input_path: str,
+    output_path: str,
+    normalize_filter: str,
+    crop_start: Optional[float] = None,
+    crop_end: Optional[float] = None,
+    codec: Optional[str] = "libmp3lame",
+    bitrate: Optional[str] = "192k",
+    sample_rate: Optional[int] = 48000,
+    channels: Optional[int] = 2,
+    logging: bool = False,
+    cancel_flag: Optional[Callable[[], bool]] = None,
 ) -> Optional[list[str]]:
     first_cmd = ["ffmpeg"]
     if crop_start is not None:
@@ -193,10 +219,7 @@ def build_two_pass_normalize_command(
 
     try:
         proc = subprocess.Popen(
-            first_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+            first_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
 
         stderr_lines = []
@@ -215,22 +238,25 @@ def build_two_pass_normalize_command(
             if line:
                 stderr_lines.append(line)
 
-        stderr = ''.join(stderr_lines)
+        stderr = "".join(stderr_lines)
 
         if proc.returncode != 0:
             raise RuntimeError("FFmpeg returned non-zero exit code in pass 1")
 
-        match = re.search(r'\{[\s\S]+?\}', stderr)
+        match = re.search(r"\{[\s\S]+?\}", stderr)
         if not match:
             raise ValueError("Could not extract loudnorm JSON output.")
         data = json.loads(match.group(0))
 
         preset_key = next(
-            (k for k, v in AudioNormalizePresets.PRESETS.items()
-             if f"I={v['I']}" in normalize_filter and
-             f"TP={v['TP']}" in normalize_filter and
-             f"LRA={v['LRA']}" in normalize_filter),
-            None
+            (
+                k
+                for k, v in AudioNormalizePresets.PRESETS.items()
+                if f"I={v['I']}" in normalize_filter
+                and f"TP={v['TP']}" in normalize_filter
+                and f"LRA={v['LRA']}" in normalize_filter
+            ),
+            None,
         )
         if not preset_key:
             raise ValueError("No matching preset found.")
@@ -256,7 +282,7 @@ def build_two_pass_normalize_command(
             codec=codec,
             bitrate=bitrate,
             sample_rate=sample_rate,
-            channels=channels
+            channels=channels,
         )
 
     except Exception as e:

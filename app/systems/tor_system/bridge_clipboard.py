@@ -1,16 +1,24 @@
 # app/systems/tor_system/bridge_clipboard.py
 
 import re
-import pyperclip
 import webbrowser
+
+import pyperclip
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QLabel, QPushButton,
-    QTextEdit, QCheckBox, QMessageBox
+    QCheckBox,
+    QFrame,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
 )
-from PySide6.QtCore import QTimer, Qt, Signal
+
 from app.core import settings
 
 BRIDGE_PATTERN = re.compile(settings.TOR_BRIDGE_PATTERN, re.MULTILINE)
+
 
 class BridgeGrabber(QFrame):
     bridges_saved = Signal()
@@ -38,7 +46,9 @@ class BridgeGrabber(QFrame):
 
         self.manual_input = QTextEdit(self)
         self.manual_input.setPlaceholderText("Paste bridges here...")
-        self.manual_input.setStyleSheet("background-color: #222; color: #f0f0f0; border: 1px solid #444;")
+        self.manual_input.setStyleSheet(
+            "background-color: #222; color: #f0f0f0; border: 1px solid #444;"
+        )
         layout.addWidget(self.manual_input)
 
         self.append_checkbox = QCheckBox("Append to existing bridges")

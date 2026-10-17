@@ -1,7 +1,9 @@
-from datetime import datetime
-from app.core.logger.ui_logger import UILogger
-from app.core import settings
 import threading
+from datetime import datetime
+
+from app.core import settings
+from app.core.logger.ui_logger import UILogger
+
 
 def _format_message(level, message):
     timestamp = datetime.now().strftime("[%H:%M:%S]")
@@ -15,6 +17,7 @@ def _format_message(level, message):
     }
     tag = level_styles.get(level.lower(), level.upper())
     return f"{timestamp} [{tag}] {message.strip()}"
+
 
 class Logger:
     _instance = None

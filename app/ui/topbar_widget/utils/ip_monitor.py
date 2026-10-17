@@ -1,11 +1,12 @@
-from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QCheckBox
-from PySide6.QtCore import QTimer, Qt, QThreadPool
 import socket
 
+from PySide6.QtCore import Qt, QThreadPool, QTimer
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QWidget
+
 from app.core import settings
+from app.core.resource_path import resource_path
 from app.ui.dialog_box_builder import get_confirmation
 from app.ui.topbar_widget.utils.ip_fetcher import PublicIPFetcher
-from app.core.resource_path import resource_path
 
 
 class IPMonitorWidget(QWidget):
@@ -97,7 +98,9 @@ class IPMonitorWidget(QWidget):
         if not self.public_ip or self.public_ip in {"Checking...", "Error"}:
             return
 
-        if get_confirmation(self, "Set Home IP", f"Do you want to set '{self.public_ip}' as your Home IP?"):
+        if get_confirmation(
+            self, "Set Home IP", f"Do you want to set '{self.public_ip}' as your Home IP?"
+        ):
             settings_data = settings.load_user_settings()
             settings_data["home_ip"] = self.public_ip
             settings.save_user_settings(settings_data)

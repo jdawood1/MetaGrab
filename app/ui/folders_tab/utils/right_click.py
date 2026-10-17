@@ -1,12 +1,13 @@
-from PySide6.QtWidgets import QMenu, QMessageBox
-from PySide6.QtGui import QAction
-from PySide6.QtCore import Qt
 from pathlib import Path
 
-from app.ui.dialog_box_builder import get_text, show_info, confirm_delete
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMenu, QMessageBox
+
+from app.ui.dialog_box_builder import confirm_delete, get_text, show_info
 from app.ui.folders_tab.utils.metadata_preview import get_audio_metadata
 
-AUDIO_EXTENSIONS = {'.mp3', '.flac', '.wav', '.m4a', '.aac', '.ogg', '.webm'}
+AUDIO_EXTENSIONS = {".mp3", ".flac", ".wav", ".m4a", ".aac", ".ogg", ".webm"}
 
 
 class ContextMenuHandler:
@@ -33,7 +34,7 @@ class ContextMenuHandler:
             "Preview Info": lambda: self.parent.preview_item(item),
             "Show in Finder": self.parent.show_in_finder,
             "Rename...": lambda: self._show_rename_dialog(widget, path),
-            "Delete": lambda: self._confirm_and_delete(widget, path)
+            "Delete": lambda: self._confirm_and_delete(widget, path),
         }
 
         if path.suffix.lower() in AUDIO_EXTENSIONS:
