@@ -1,6 +1,7 @@
 """Isolated yt-dlp process: a retry always loads the newly installed version."""
 
 import json
+import os
 import sys
 
 from app.systems.download_system.anizone import create_downloader
@@ -22,6 +23,7 @@ class DownloadLogger:
 
 
 def main():
+    os.environ["METAGRAB_HELPER"] = "1"
     request = json.loads(sys.stdin.readline())
     options = request["options"]
 

@@ -1,10 +1,11 @@
-import subprocess
 import tempfile
 import traceback
 from pathlib import Path
 
 from mutagen.mp3 import MP3
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
+
+from app.core import processes as subprocess
 
 
 class PreviewWorkerSignals(QObject):
@@ -18,12 +19,15 @@ class PreviewBuildWorker(QRunnable):
     def __init__(self, file_paths: list[str]):
         super().__init__()
         self.file_paths = file_paths
+        self.temp_dir = tempfile.TemporaryDirectory(prefix="metagrab-preview-")
         self.signals = PreviewWorkerSignals()
 
     @Slot()
     def run(self):
         try:
-            temp_dir = Path(tempfile.gettempdir())
+            if subprocess.closing.is_set():
+                return
+            temp_dir = Path(self.temp_dir.name)
             concat_txt = temp_dir / "preview_concat.txt"
             preview_mp3 = temp_dir / "preview_combined.mp3"
 
@@ -57,11 +61,14 @@ class PreviewBuildWorker(QRunnable):
             ]
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+            if subprocess.closing.is_set():
+                return
             if preview_mp3.exists():
                 self.signals.finished.emit(str(preview_mp3), cumulative_ms)
             else:
                 self.signals.finished.emit("", [])
 
         except Exception:
-            traceback.print_exc()
-            self.signals.finished.emit("", [])
+            if not subprocess.closing.is_set():
+                traceback.print_exc()
+                self.signals.finished.emit("", [])

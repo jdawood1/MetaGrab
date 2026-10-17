@@ -3,12 +3,13 @@
 import os
 import re
 import shutil
-import subprocess
 import sys
 import threading
 import time
 from pathlib import Path
 from urllib.parse import urlparse
+
+from app.core import processes as subprocess
 
 _REPAIR_LOCK = threading.Lock()
 

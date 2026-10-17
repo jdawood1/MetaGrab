@@ -4,6 +4,17 @@ import signal
 import sys
 import traceback
 
+# Frozen helpers run before importing the GUI or creating application objects.
+if len(sys.argv) >= 3 and sys.argv[1] == "--metagrab-worker":
+    os.environ["METAGRAB_HELPER"] = "1"
+    if sys.argv[2] == "download":
+        from app.systems.download_system.download_runner import main as worker_main
+    elif sys.argv[2] == "analysis":
+        from app.systems.download_system.analysis_runner import main as worker_main
+    else:
+        raise SystemExit("Unknown worker mode")
+    raise SystemExit(worker_main())
+
 faulthandler.enable()
 
 # Fix system PATH for subprocess tools
@@ -15,7 +26,7 @@ from app.core.crash_log import CrashHandler
 
 # Core systems
 from app.core.logger import logger
-from app.core.shutdown_mgr import ShutdownManager
+from app.core.shutdown_mgr import QuitGuard, ShutdownManager
 from app.styles.theme import apply_theme
 from app.systems.tor_system.tor_manager import TorManager
 from app.ui.main_window.central_window import MainWindow
@@ -28,11 +39,17 @@ shutdown_manager = ShutdownManager()
 # Handle Ctrl+C or kill signal
 def _on_interrupt(sig, frame):
     logger.info("Main: Interrupt signal received. Initiating shutdown...")
-    shutdown_manager.shutdown()
-    sys.exit(0)
+    app = QApplication.instance()
+    if app:
+        for window in app.topLevelWidgets():
+            if isinstance(window, MainWindow):
+                window.close()
+                return
+        app.quit()
 
 
 signal.signal(signal.SIGINT, _on_interrupt)
+signal.signal(signal.SIGTERM, _on_interrupt)
 
 
 def main():
@@ -67,7 +84,10 @@ def main():
 
         splash.show()
 
-        window = MainWindow(tor_manager=tor_manager)
+        window = MainWindow(tor_manager=tor_manager, shutdown_manager=shutdown_manager)
+
+        quit_guard = QuitGuard(window, app)
+        app.installEventFilter(quit_guard)
 
         splash.close()
         window.show()

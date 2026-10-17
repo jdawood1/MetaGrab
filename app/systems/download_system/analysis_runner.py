@@ -1,12 +1,14 @@
 """Run analysis in a fresh process so updated downloader packages are loaded."""
 
 import json
+import os
 import sys
 
 from app.systems.download_system.analysis import analyze_media
 
 
 def main():
+    os.environ["METAGRAB_HELPER"] = "1"
     request = json.loads(sys.stdin.readline())
     try:
         report = analyze_media(

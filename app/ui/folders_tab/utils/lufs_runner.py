@@ -1,11 +1,10 @@
 import json
-import os
 import re
-import signal
-import subprocess
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
+
+from app.core import processes as subprocess
 
 
 class LufsSignalEmitter(QObject):
@@ -62,6 +61,11 @@ class LufsRunner(QRunnable):
         except Exception as e:
             result = {"error": f"LUFS analysis failed: {e}"}
         finally:
+            if self._process is not None:
+                subprocess.stop(self._process)
+                for pipe in (self._process.stdout, self._process.stderr):
+                    if pipe:
+                        pipe.close()
             self._process = None
 
         self.signals.finished.emit(self.file_path, result)
@@ -71,12 +75,5 @@ class LufsRunner(QRunnable):
         self._terminate_process()
 
     def _terminate_process(self):
-        if self._process and self._process.poll() is None:
-            try:
-                if os.name == "nt":
-                    self._process.send_signal(signal.CTRL_BREAK_EVENT)
-                else:
-                    self._process.terminate()
-                self._process.wait(timeout=5)
-            except Exception:
-                self._process.kill()
+        if self._process is not None:
+            subprocess.stop(self._process)

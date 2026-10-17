@@ -1,6 +1,8 @@
 import requests
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 
+from app.core import processes
+
 
 class IPFetchWorkerSignals(QObject):
     result = Signal(str)
@@ -16,6 +18,8 @@ class PublicIPFetcher(QRunnable):
 
     @Slot()
     def run(self):
+        if processes.closing.is_set():
+            return
         try:
             response = requests.get("https://api.ipify.org", timeout=5)
             public_ip = response.text.strip()

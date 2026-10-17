@@ -1,6 +1,22 @@
 import threading
+import weakref
 
+from PySide6.QtCore import QCoreApplication, QObject, Qt, Signal, Slot
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
+from shiboken6 import isValid
+
+
+class LogBridge(QObject):
+    message = Signal(str, str)
+
+    def __init__(self, owner):
+        super().__init__(QCoreApplication.instance())
+        self.owner = owner
+        self.message.connect(self.deliver, Qt.QueuedConnection)
+
+    @Slot(str, str)
+    def deliver(self, text, level):
+        self.owner._deliver(text, level)
 
 
 class UILogger:
@@ -9,41 +25,41 @@ class UILogger:
     def __init__(self):
         self.targets = {}
         self._lock = threading.Lock()
+        self._bridge = None
+        self._closed = False
 
     def register_target(self, name, widget):
         with self._lock:
-            self.targets[name] = widget
+            self._closed = False
+            self.targets[name] = weakref.ref(widget)
+            widget.document().setMaximumBlockCount(self.MAX_LINES)
+            if self._bridge is None:
+                self._bridge = LogBridge(self)
 
-    def log(self, text: str, level: str = "info"):
-        if not text.strip():
-            return
-        formatted_text = text
-
+    def log(self, text, level="info"):
         with self._lock:
-            widget = self.targets.get("main")
+            bridge = self._bridge if not self._closed else None
+        if bridge and text.strip():
+            bridge.message.emit(text, level)
 
-        if widget:
-            self._write_to_widget(widget, formatted_text, level)
+    def _deliver(self, text, level):
+        with self._lock:
+            reference = self.targets.get("main") if not self._closed else None
+        widget = reference() if reference else None
+        if widget is not None and isValid(widget):
+            self._write_to_widget(widget, text, level)
 
     def _write_to_widget(self, widget, text, level):
-        if widget is None:
-            return
-
-        widget.moveCursor(QTextCursor.End)
         cursor = widget.textCursor()
+        cursor.movePosition(QTextCursor.End)
         char_format = QTextCharFormat()
-
         color = self._get_color_for_level(level)
         if color:
             char_format.setForeground(color)
-        if level == "console":
-            char_format.setFontItalic(True)
-
+        char_format.setFontItalic(level == "console")
         cursor.setCharFormat(char_format)
         cursor.insertText(text + "\n")
-        cursor.setCharFormat(QTextCharFormat())
-        widget.moveCursor(QTextCursor.End)
-        self._truncate_widget(widget)
+        widget.setTextCursor(cursor)
 
     def _get_color_for_level(self, level):
         if level == "warning":
@@ -61,35 +77,25 @@ class UILogger:
         else:
             return None
 
-    def _truncate_widget(self, widget):
-        document = widget.document()
-        if document.blockCount() > self.MAX_LINES:
-            cursor = widget.textCursor()
-            cursor.movePosition(cursor.Start)
-            for _ in range(document.blockCount() - self.MAX_LINES):
-                cursor.select(cursor.LineUnderCursor)
-                cursor.removeSelectedText()
-                cursor.deleteChar()
-
     def debug(self, text):
-        self.log(text, level="debug")
+        self.log(text, "debug")
 
     def info(self, text):
-        self.log(text, level="info")
+        self.log(text, "info")
 
     def warning(self, text):
-        self.log(text, level="warning")
+        self.log(text, "warning")
 
     def error(self, text):
-        self.log(text, level="error")
+        self.log(text, "error")
 
     def success(self, text):
-        self.log(text, level="success")
+        self.log(text, "success")
 
     def console(self, text):
-        self.log(text, level="console")
+        self.log(text, "console")
 
     def shutdown(self):
-        """Clear all registered widgets to avoid access after deletion."""
         with self._lock:
+            self._closed = True
             self.targets.clear()

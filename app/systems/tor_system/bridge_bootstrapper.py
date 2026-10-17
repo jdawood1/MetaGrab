@@ -2,8 +2,8 @@
 
 import os
 import shutil
-import subprocess
 
+from app.core import processes as subprocess
 from app.core import settings
 from app.core.logger import logger
 

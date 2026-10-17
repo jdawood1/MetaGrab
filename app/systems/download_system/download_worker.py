@@ -1,11 +1,11 @@
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QApplication
 
+from app.core import processes as subprocess
 from app.core.logger import logger
 from app.systems.download_system.health import ensure_download_tools
 from app.systems.download_system.selections import apply_selections
@@ -48,9 +48,11 @@ class DownloadWorker(QThread):
         logger.warning(f"DownloadWorker: Cancelling download → {self.url}")
         self._is_cancelled = True
         if self._process and self._process.poll() is None:
-            self._process.terminate()
+            subprocess.stop(self._process)
 
     def _emit_safe(self, signal, *args):
+        if subprocess.closing.is_set():
+            return
         if QApplication.instance() is None:
             return
         try:
@@ -109,43 +111,22 @@ class DownloadWorker(QThread):
                 self._emit_safe(self.error, self.url, str(e))
 
         finally:
+            if self._process is not None:
+                subprocess.stop(self._process)
+                self._process = None
             active_download_threads.discard(self)
 
     def _download(self, options):
         if self._is_cancelled:
             return "Cancelled"
-        if getattr(sys, "frozen", False):
-            # A frozen executable cannot launch Python modules through sys.executable.
-            from app.systems.download_system.anizone import create_downloader
-
-            def hook(data):
-                if self._is_cancelled:
-                    raise RuntimeError("__CANCELLED__")
-                self._emit_safe(
-                    self.progress, {**data, "title": data.get("info_dict", {}).get("title")}
-                )
-
-            options = {
-                **options,
-                "progress_hooks": [hook],
-                "postprocessor_hooks": [
-                    lambda data: self._emit_safe(
-                        self.status,
-                        self.url,
-                        "Processing: " + str(data.get("postprocessor") or "media"),
-                    )
-                ],
-            }
-            try:
-                with create_downloader(options) as downloader:
-                    result = downloader.download([self.url])
-                return None if not result else "Downloader failed."
-            except Exception as exc:
-                return str(exc)
         errors = []
         warnings = []
         with subprocess.Popen(
-            [sys.executable, "-m", "app.systems.download_system.download_runner"],
+            (
+                [sys.executable, "--metagrab-worker", "download"]
+                if getattr(sys, "frozen", False)
+                else [sys.executable, "-m", "app.systems.download_system.download_runner"]
+            ),
             cwd=Path(__file__).resolve().parents[3],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,

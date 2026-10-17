@@ -41,8 +41,8 @@ class AudioPreviewWidget(QWidget):
         super().__init__(parent)
         self.thread_pool = QThreadPool.globalInstance()
 
-        self.audio_output = QAudioOutput()
-        self.media_player = QMediaPlayer()
+        self.audio_output = QAudioOutput(self)
+        self.media_player = QMediaPlayer(self)
         self.media_player.setAudioOutput(self.audio_output)
 
         self.preview_path = None
@@ -238,6 +238,10 @@ class AudioPreviewWidget(QWidget):
     def set_preview_files(self, file_paths: list[str], auto_play: bool = False):
         self.stop_audio()
         self.set_audio_file("")
+        previous = getattr(self, "_preview_temp_dir", None)
+        if previous:
+            previous.cleanup()
+            self._preview_temp_dir = None
         self.seek_slider.set_markers([])
 
         if not file_paths or len(file_paths) < 2:
@@ -245,14 +249,27 @@ class AudioPreviewWidget(QWidget):
 
         self._auto_play_after_build = auto_play
         self._current_preview_worker = PreviewBuildWorker(file_paths)
-        self._current_preview_worker.signals.finished.connect(self._on_preview_ready)
+        self._current_preview_worker.signals.finished.connect(
+            lambda path, markers, job=self._current_preview_worker: self._on_preview_ready(
+                path, markers, job
+            )
+        )
         QThreadPool.globalInstance().start(self._current_preview_worker)
 
-    def _on_preview_ready(self, preview_path: str, markers: list[int]):
+    def _on_preview_ready(self, preview_path: str, markers: list[int], worker=None):
+        if worker is not None and worker is not self._current_preview_worker:
+            worker.temp_dir.cleanup()
+            return
         if not preview_path or not Path(preview_path).exists():
             self.set_audio_file("")
             return
 
+        previous = getattr(self, "_preview_temp_dir", None)
+        self.media_player.stop()
+        self.media_player.setSource(QUrl())
+        if previous:
+            previous.cleanup()
+        self._preview_temp_dir = (worker or self._current_preview_worker).temp_dir
         self.set_audio_file(preview_path)
         self.seek_slider.set_markers(markers)
         if getattr(self, "_auto_play_after_build", False):
@@ -261,4 +278,8 @@ class AudioPreviewWidget(QWidget):
     def clear_preview(self):
         self.stop_audio()
         self.set_audio_file("")
+        previous = getattr(self, "_preview_temp_dir", None)
+        if previous:
+            previous.cleanup()
+            self._preview_temp_dir = None
         self.seek_slider.set_markers([])

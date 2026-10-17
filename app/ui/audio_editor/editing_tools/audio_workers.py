@@ -1,8 +1,8 @@
 import json
 import re
-import subprocess
 from typing import Callable, Optional
 
+from app.core import processes as subprocess
 from app.core.logger import logger
 from app.ui.audio_editor.editing_tools.audio_presets import (
     AudioFormatPresets,
@@ -222,23 +222,15 @@ def build_two_pass_normalize_command(
             first_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
 
-        stderr_lines = []
         while True:
-            if cancel_flag and cancel_flag():
-                proc.terminate()
-                try:
-                    proc.wait(timeout=2)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
+            if subprocess.closing.is_set() or (cancel_flag and cancel_flag()):
+                subprocess.stop(proc)
                 return None
-
-            line = proc.stderr.readline()
-            if not line and proc.poll() is not None:
+            try:
+                _, stderr = proc.communicate(timeout=0.2)
                 break
-            if line:
-                stderr_lines.append(line)
-
-        stderr = "".join(stderr_lines)
+            except subprocess.TimeoutExpired:
+                continue
 
         if proc.returncode != 0:
             raise RuntimeError("FFmpeg returned non-zero exit code in pass 1")

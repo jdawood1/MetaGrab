@@ -3,12 +3,12 @@
 import os
 import shutil
 import socket
-import subprocess
 import threading
 import time
 
 from stem.control import Controller
 
+from app.core import processes as subprocess
 from app.core import settings
 from app.core.logger import logger
 
@@ -23,6 +23,7 @@ class TorController:
     def __init__(self):
         self.tor_process = None
         self._cancel_bootstrap = False
+        self._reader = None
 
     def cancel_bootstrap(self):
         self._cancel_bootstrap = True
@@ -87,9 +88,10 @@ class TorController:
             )
 
         if self.tor_process.stdout:
-            threading.Thread(
+            self._reader = threading.Thread(
                 target=self.stream_tor_output, args=(self.tor_process.stdout,), daemon=True
-            ).start()
+            )
+            self._reader.start()
 
         if not self.wait_for_bootstrap():
             logger.error("Tor bootstrap failed. Terminating Tor process.")
@@ -121,13 +123,16 @@ class TorController:
 
     def stop(self):
         self._cancel_bootstrap = True
-        if self.tor_process and self.tor_process.poll() is None:
-            try:
-                self.tor_process.terminate()
-                self.tor_process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                self.tor_process.kill()
-            logger.info("TorController: Tor process terminated.")
+        process = self.tor_process
+        if process is not None:
+            subprocess.stop(process)
+            if self._reader and self._reader is not threading.current_thread():
+                self._reader.join(timeout=1)
+            if process.stdout:
+                process.stdout.close()
+            self.tor_process = None
+            self._reader = None
+            logger.info("TorController: owned Tor process stopped.")
 
     def is_running(self):
         return (

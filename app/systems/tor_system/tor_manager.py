@@ -1,6 +1,5 @@
 # app/systems/tor_system/tor_manager.py
 import atexit
-import subprocess
 
 from app.core import settings
 from app.core.logger import logger
@@ -35,18 +34,5 @@ class TorManager:
             self.controller.stop()
         except Exception as e:
             logger.warning(f"TorManager: Error during controller stop: {e}")
-
-        try:
-            subprocess.run(
-                ["pkill", "-9", "tor"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            logger.info("TorManager: All Tor processes force-killed.")
-        except subprocess.CalledProcessError:
-            logger.info("TorManager: No Tor processes were running.")
-        except Exception as e:
-            logger.error(f"TorManager: Error during pkill: {e}")
 
         self.running = False

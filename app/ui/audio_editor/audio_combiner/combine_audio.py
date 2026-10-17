@@ -1,11 +1,11 @@
 import os
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import List
 
 from PySide6.QtCore import QThread, Signal
 
+from app.core import processes as subprocess
 from app.core.logger import logger
 
 
@@ -18,6 +18,7 @@ class AudioCombiner:
             logger.error("AudioCombiner: Need at least two files to combine.")
             return False
 
+        list_file_path = None
         try:
             with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as list_file:
                 for input_file in inputs:
@@ -51,7 +52,7 @@ class AudioCombiner:
             return False
 
         finally:
-            if os.path.exists(list_file_path):
+            if list_file_path and os.path.exists(list_file_path):
                 os.remove(list_file_path)
                 logger.debug("AudioCombiner: Temp file list cleaned up.")
 
@@ -65,7 +66,19 @@ class CombineWorker(QThread):
         super().__init__()
         self.input_paths = input_paths
         self.output_path = output_path
+        from app.ui.audio_editor.editing_tools.audio_workers import active_audio_threads
+
+        active_audio_threads.add(self)
+
+    def stop(self):
+        pass  # The coordinated shutdown cancels the owned subprocess group.
 
     def run(self):
-        success = AudioCombiner.combine(self.input_paths, self.output_path)
-        self.finished.emit(success, self.output_path)
+        from app.ui.audio_editor.editing_tools.audio_workers import active_audio_threads
+
+        try:
+            success = AudioCombiner.combine(self.input_paths, self.output_path)
+            if not subprocess.closing.is_set():
+                self.finished.emit(success, self.output_path)
+        finally:
+            active_audio_threads.discard(self)

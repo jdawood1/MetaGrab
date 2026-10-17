@@ -1,12 +1,12 @@
 """Source metadata and a bounded audio sample; independent of the Qt interface."""
 
 import json
-import subprocess
 import tempfile
 from pathlib import Path
 
 from yt_dlp.utils import download_range_func
 
+from app.core import processes as subprocess
 from app.systems.download_system.anizone import create_downloader
 from app.systems.download_system.selections import media_choices
 

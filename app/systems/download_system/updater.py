@@ -1,10 +1,11 @@
 """Update the source-install downloader without changing the running Qt process."""
 
 import json
-import subprocess
 import sys
 import threading
 from urllib.request import urlopen
+
+from app.core import processes as subprocess
 
 _UPDATE_LOCK = threading.Lock()
 _CHECKED = False

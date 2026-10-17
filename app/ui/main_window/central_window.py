@@ -21,10 +21,11 @@ from app.ui.topbar_widget.topbar_widget import TopBarMenu
 class MainWindow(QMainWindow):
     """The main window of MetaGrab."""
 
-    def __init__(self, tor_manager):
+    def __init__(self, tor_manager, shutdown_manager=None):
         super().__init__()
 
         self.tor_manager = tor_manager
+        self.shutdown_manager = shutdown_manager
 
         self.setWindowTitle(f"{APP_NAME} {APP_VERSION}")
         self.setMinimumSize(1280, 800)
@@ -85,3 +86,10 @@ class MainWindow(QMainWindow):
         self.sidebar.downloads_clicked.connect(lambda: self.stack.setCurrentIndex(1))
         self.sidebar.audio_editor_clicked.connect(lambda: self.stack.setCurrentIndex(2))
         self.sidebar.video_studio_clicked.connect(lambda: self.stack.setCurrentIndex(3))
+
+    def closeEvent(self, event):
+        if self.shutdown_manager and not self.shutdown_manager.complete:
+            event.ignore()
+            self.shutdown_manager.request(self)
+        else:
+            event.accept()
