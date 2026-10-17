@@ -26,9 +26,25 @@ def main():
     options = request["options"]
 
     def hook(data):
-        emit("progress", {key: data.get(key) for key in ("status", "_percent_str")})
+        payload = {
+            key: data.get(key)
+            for key in (
+                "status",
+                "_percent_str",
+                "downloaded_bytes",
+                "total_bytes",
+                "total_bytes_estimate",
+                "speed",
+                "eta",
+            )
+        }
+        payload["title"] = data.get("info_dict", {}).get("title")
+        emit("progress", payload)
 
     options["progress_hooks"] = [hook]
+    options["postprocessor_hooks"] = [
+        lambda data: emit("processing", data.get("postprocessor") or "Processing")
+    ]
     options["logger"] = DownloadLogger()
     try:
         with create_downloader(options) as downloader:

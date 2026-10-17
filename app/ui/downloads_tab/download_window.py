@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMessageBox,
     QPlainTextEdit,
-    QProgressBar,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
@@ -56,7 +55,7 @@ class DownloadsWindow(QWidget):
         super().__init__()
         self.setObjectName("DownloaderWindow")
         self.thread_pool = QThreadPool(self)
-        self.active_worker = None
+        self.active_workers = {}
         self._setup_ui()
         self._connect_signals()
 
@@ -64,6 +63,9 @@ class DownloadsWindow(QWidget):
         self._analyze_base_style = ""
 
         self.task_tracker = DownloadTaskTracker("downloads", self.list_widget)
+        self.task_tracker.changed.connect(self.refresh_download_summary)
+        self.task_tracker.cancel_requested.connect(self.cancel_download)
+        self.task_tracker.retry_requested.connect(self.retry_download)
         self.context_menu = DownloadContextMenu(self.list_widget, self.task_tracker)
         self.list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.list_widget.customContextMenuRequested.connect(self.context_menu.show)
@@ -92,7 +94,7 @@ class DownloadsWindow(QWidget):
         self.download_button = QPushButton("Download")
         self.download_button.setFixedWidth(100)
 
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton("Cancel all")
         self.cancel_button.setObjectName("CancelButton")
         self.cancel_button.setFixedWidth(100)
         self.cancel_button.setEnabled(False)
@@ -190,10 +192,8 @@ class DownloadsWindow(QWidget):
 
         layout.addLayout(options_row)
 
-        self.progress = QProgressBar()
-        self.progress.setValue(0)
-        self.progress.setTextVisible(False)
-        layout.addWidget(self.progress)
+        self.download_summary = QLabel("0 active")
+        layout.addWidget(self.download_summary)
 
         self.list_widget = QListWidget()
         self.list_widget.addItem("(No downloads yet)")
@@ -246,64 +246,72 @@ class DownloadsWindow(QWidget):
         if embed:
             format_choice = "6"
             self.format_dropdown.setCurrentIndex(5)
-        worker = DownloadWorker(
+        self.start_download(
             cleaned_url,
             format_choice,
-            normalize=normalize,
-            audio=self.audio_language.currentData(),
-            caption=self.caption_language.currentData(),
-            embed=embed,
+            normalize,
+            self.audio_language.currentData(),
+            self.caption_language.currentData(),
+            embed,
         )
-        task_key = self.task_tracker.register_task(cleaned_url, format_choice, worker)
+        self.url_input.clear()
 
-        if not task_key:
-            return  # Duplicate task, already registered
-
-        self.active_worker = worker
-        self.cancel_button.setEnabled(True)
-
+    def start_download(
+        self, url, format_choice, normalize=False, audio=None, caption=None, embed=False
+    ):
+        worker = DownloadWorker(
+            url, format_choice, normalize=normalize, audio=audio, caption=caption, embed=embed
+        )
+        task_key = self.task_tracker.register_task(url, format_choice, worker)
+        self.active_workers[task_key] = worker
         worker.status.connect(lambda _, msg: self.task_tracker.update_status(task_key, msg))
         worker.error.connect(lambda _, err: self.handle_download_error(task_key, err))
         worker.finished.connect(lambda _: self.on_task_finished(task_key))
         worker.cancelled.connect(lambda _: self.handle_worker_cancelled(task_key))
-        worker.progress.connect(self.update_progress)
+        worker.progress.connect(lambda data: self.task_tracker.update_progress(task_key, data))
+        self.refresh_download_summary()
         worker.start()
-
-        self.url_input.clear()
         self.list_widget.scrollToBottom()
+        return task_key
+
+    def refresh_download_summary(self):
+        summary, active = self.task_tracker.summary()
+        self.download_summary.setText(summary)
+        self.cancel_button.setEnabled(active > 0)
 
     def handle_download_error(self, task_key, error):
-        self.task_tracker.mark_failed(task_key)
-        self.cancel_button.setEnabled(False)
-        self.progress.setValue(0)
-        self.active_worker = None
-        QMessageBox.critical(self, "Download failed", error)
+        self.active_workers.pop(task_key, None)
+        self.task_tracker.mark_failed(task_key, error)
+
+    def cancel_download(self, task_key):
+        worker = self.active_workers.get(task_key)
+        if worker:
+            self.task_tracker.mark_cancelling(task_key)
+            worker.stop()
 
     def cancel_active_download(self):
-        if self.active_worker:
-            self.active_worker.stop()  # Signal emitted from within
-            logger.info("Cancellation signal sent to worker.")
-            self.cancel_button.setEnabled(False)
-            self.progress.setValue(0)
+        for task_key in list(self.active_workers):
+            self.cancel_download(task_key)
+
+    def retry_download(self, task_key):
+        entry = self.task_tracker._tasks.get(task_key)
+        if not entry or entry["state"] not in {"failed", "cancelled"}:
+            return
+        old = entry["worker"]
+        if old.isRunning():
+            return
+        entry["action"].setEnabled(False)
+        self.start_download(
+            old.url, old.format_choice, old.normalize, old.audio, old.caption, old.embed
+        )
 
     def handle_worker_cancelled(self, task_key):
+        self.active_workers.pop(task_key, None)
         self.task_tracker.mark_cancelled(task_key)
-        self.cancel_button.setEnabled(False)
-        self.progress.setValue(0)
-        self.active_worker = None
-
-    def update_progress(self, data):
-        try:
-            percent = float(data.get("_percent_str", "0").replace("%", "").strip())
-            self.progress.setValue(int(percent))
-        except Exception:
-            pass
 
     def on_task_finished(self, task_key):
+        self.active_workers.pop(task_key, None)
         self.task_tracker.mark_complete(task_key)
-        self.progress.setValue(0)
-        self.cancel_button.setEnabled(False)
-        self.active_worker = None
 
     def handle_analyze_clicked(self):
         url = self.url_input.text().strip()

@@ -1,3 +1,4 @@
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QListWidgetItem, QMenu
 
@@ -13,8 +14,8 @@ class DownloadContextMenu:
     def _setup_menu(self):
         self.menu = QMenu(self.parent)
 
-        self.clear_selected_action = QAction("Clear Selected", self.parent)
-        self.clear_all_action = QAction("Clear All", self.parent)
+        self.clear_selected_action = QAction("Clear selected finished", self.parent)
+        self.clear_all_action = QAction("Clear all finished", self.parent)
 
         self.menu.addAction(self.clear_selected_action)
 
@@ -33,20 +34,15 @@ class DownloadContextMenu:
         selected_items = self.parent.selectedItems()
         for item in selected_items:
             task_key = self._extract_task_key(item)
-            self.task_tracker.force_unregister(task_key)
-            self.parent.takeItem(self.parent.row(item))
+            if self.task_tracker.force_unregister(task_key):
+                self.parent.takeItem(self.parent.row(item))
 
     def clear_all(self):
         for i in reversed(range(self.parent.count())):
             item = self.parent.item(i)
             task_key = self._extract_task_key(item)
-            self.task_tracker.force_unregister(task_key)
-            self.parent.takeItem(i)
+            if self.task_tracker.force_unregister(task_key):
+                self.parent.takeItem(i)
 
     def _extract_task_key(self, item: QListWidgetItem) -> str:
-        """Extract task key from item text (before the emoji/status marker)."""
-        text = item.text()
-        for marker in ("⏳", "🔥", "❌", "🚫"):
-            if marker in text:
-                return text.split(marker)[0].strip()
-        return text.strip()
+        return item.data(Qt.UserRole)

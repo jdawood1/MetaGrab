@@ -90,6 +90,7 @@ class DownloadWorker(QThread):
                     error += "\n" + explanation
                 raise RuntimeError(error)
 
+            self._emit_safe(self.status, self.url, "Exporting files…")
             moved = move_downloaded_files(sandbox)
 
             for src, info in moved.items():
@@ -120,9 +121,21 @@ class DownloadWorker(QThread):
             def hook(data):
                 if self._is_cancelled:
                     raise RuntimeError("__CANCELLED__")
-                self._emit_safe(self.progress, data)
+                self._emit_safe(
+                    self.progress, {**data, "title": data.get("info_dict", {}).get("title")}
+                )
 
-            options = {**options, "progress_hooks": [hook]}
+            options = {
+                **options,
+                "progress_hooks": [hook],
+                "postprocessor_hooks": [
+                    lambda data: self._emit_safe(
+                        self.status,
+                        self.url,
+                        "Processing: " + str(data.get("postprocessor") or "media"),
+                    )
+                ],
+            }
             try:
                 with create_downloader(options) as downloader:
                     result = downloader.download([self.url])
@@ -153,11 +166,8 @@ class DownloadWorker(QThread):
                 kind, payload = event["kind"], event["payload"]
                 if kind == "progress":
                     self._emit_safe(self.progress, payload)
-                    self._emit_safe(
-                        self.status,
-                        self.url,
-                        "Downloading... " + (payload.get("_percent_str") or ""),
-                    )
+                elif kind == "processing":
+                    self._emit_safe(self.status, self.url, "Processing: " + str(payload))
                 elif kind == "error":
                     errors.append(payload)
                 elif kind == "warning":
