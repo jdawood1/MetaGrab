@@ -41,3 +41,6 @@ dist/
 
 # Isolated packaging environment
 .venv-build/
+
+# Generated Python package metadata
+*.egg-info/
